@@ -1,6 +1,6 @@
 require('dotenv').config();
+const { logger } = require('config');
 const mongoose = require('mongoose');
-const logger = require('./logger');
 
 // mongoose.set('debug', true);
 const db = mongoose.connection;

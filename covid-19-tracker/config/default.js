@@ -11,4 +11,4 @@ winston.add(
   })
 );
 
-module.exports = winston;
+module.exports = { logger: winston };

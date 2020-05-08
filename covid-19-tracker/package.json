@@ -10,6 +10,7 @@
   "author": "yuci.gou@gmail.com",
   "license": "ISC",
   "dependencies": {
+    "config": "^3.3.1",
     "dotenv": "^8.2.0",
     "mongoose": "^5.9.12",
     "winston": "^3.2.1",
