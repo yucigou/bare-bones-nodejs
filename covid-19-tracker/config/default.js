@@ -19,7 +19,7 @@ module.exports = {
     connectionOptions: {
       useNewUrlParser: true,
       useUnifiedTopology: true,
-      // useFindAndModify: false,
+      useFindAndModify: false,
     },
   },
   queue: {
