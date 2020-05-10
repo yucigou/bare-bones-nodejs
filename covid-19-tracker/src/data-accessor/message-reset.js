@@ -19,8 +19,8 @@ const mongooseQueue = new MongooseQueue(
   queue.options
 );
 
-mongooseQueue.clean(function (err) {
+mongooseQueue.reset(function (err) {
   if (err) return done(err);
 
-  console.log('The queue was successfully cleaned.');
+  console.log('The queue was completely purged of all jobs.');
 });

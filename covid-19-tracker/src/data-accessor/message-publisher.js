@@ -1,6 +1,6 @@
 'use strict';
 require('dotenv').config();
-const { logger } = require('config');
+const { logger, mongodb, queue } = require('config');
 const mongoose = require('mongoose');
 var MongooseQueue = require('mongoose-queue').MongooseQueue;
 var Helper = require('./helper.js');
@@ -12,20 +12,13 @@ db.once('open', function () {
   logger.info('We are connected!');
 });
 
-mongoose.connect(
-  `mongodb://${process.env.MONGO_INITDB_ROOT_USERNAME}:${process.env.MONGO_INITDB_ROOT_PASSWORD}@localhost:27017/mydb?authSource=admin`,
-  {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  }
-);
+mongoose.connect(mongodb.uris, mongodb.connectionOptions);
 
-var myOptions = {
-  queueCollection: 'queue',
-  blockDuration: 30000,
-  maxRetries: 5,
-};
-var mongooseQueue = new MongooseQueue('payload', 'my-worker-id', myOptions);
+const mongooseQueue = new MongooseQueue(
+  queue.payloadModel,
+  queue.workerId,
+  queue.options
+);
 
 var Payload = require('./models/payload-schema');
 var payload = Helper.randomPayload();

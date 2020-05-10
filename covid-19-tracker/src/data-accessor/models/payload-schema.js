@@ -1,9 +1,9 @@
 'use strict';
+const { queue } = require('config');
+const mongoose = require('mongoose');
+const Schema = mongoose.Schema;
 
-var mongoose = require('mongoose');
-var Schema = mongoose.Schema;
-
-var Payload = new Schema({
+const Payload = new Schema({
   first: {
     type: String,
     required: true,
@@ -14,4 +14,4 @@ var Payload = new Schema({
   },
 });
 
-module.exports = mongoose.model('payload', Payload);
+module.exports = mongoose.model(queue.payloadModel, Payload);
