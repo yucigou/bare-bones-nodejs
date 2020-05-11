@@ -20,7 +20,11 @@ const mongooseQueue = new MongooseQueue(
 );
 
 mongooseQueue.clean(function (err) {
-  if (err) return done(err);
+  if (err) {
+    console.log('Error: ', err);
+  } else {
+    console.log('The queue was successfully cleaned.');
+  }
 
-  console.log('The queue was successfully cleaned.');
+  mongoose.connection.close();
 });

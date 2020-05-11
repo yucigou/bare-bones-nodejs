@@ -1,5 +1,8 @@
 FROM node:10.15.3
 
+# Install pm2
+RUN [ "npm", "install", "-g", "pm2" ]
+
 # Create app directory
 WORKDIR /usr/src/app
 
@@ -18,4 +21,4 @@ COPY src src
 
 EXPOSE 3000
 
-CMD [ "npm", "start" ]
+CMD [ "pm2", "start", "src/pm2.config.js" ]

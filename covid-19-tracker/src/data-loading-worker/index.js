@@ -19,38 +19,71 @@ const mongooseQueue = new MongooseQueue(
   queue.options
 );
 
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 const handleQueue = () => {
-  mongooseQueue.get(function (err, job) {
-    if (err) {
-      console.log('Error getting: ', err);
-      return;
-    }
+  return new Promise((resolve, reject) => {
+    mongooseQueue.get(async (err, job) => {
+      if (err) {
+        console.log('Error getting: ', err);
+        reject();
+        return;
+      }
 
-    if (!job) {
-      console.log('No job. Next.');
-      return;
-    }
+      if (!job) {
+        console.log('No job. Next.');
+        resolve();
+        return;
+      }
 
-    console.log(job.id);
-    console.log(job.payload);
-    console.log(job.blockedUntil);
-    console.log(job.done);
+      console.log(job.id);
+      console.log(job.payload);
+      console.log(job.blockedUntil);
+      console.log(job.done);
 
-    mongooseQueue.ack(job.id, (err, j) => {
-      if (err) return done(err);
+      console.log('Sleeping');
+      await sleep(10000);
+      console.log('Woke up');
 
-      console.log(
-        'The job with id ' + j.id + ' and payload ' + j.payload + ' is done.'
-      );
+      mongooseQueue.ack(job.id, (err, j) => {
+        if (err) {
+          console.log('Error acking: ', err);
+          reject();
+          return;
+        }
 
-      // Print all info returned in job object
-      console.log(j.payload);
-      console.log(j.blockedUntil);
-      console.log(j.done);
+        console.log(
+          'The job with id ' + j.id + ' and payload ' + j.payload + ' is done.'
+        );
+
+        // Print all info returned in job object
+        console.log(j.payload);
+        console.log(j.blockedUntil);
+        console.log(j.done);
+
+        console.log('Resolving');
+        resolve();
+        console.log('Resolved');
+      });
     });
   });
 };
 
-setInterval(() => {
-  handleQueue();
-}, 2000);
+const loadData = async () => {
+  console.log('About to load data');
+  try {
+    await handleQueue();
+  } catch (error) {
+    console.log('Error: ', error);
+  } finally {
+    console.log('Done with the job');
+    setTimeout(loadData, 10000);
+  }
+};
+
+loadData();
+console.log('Started the data loading job');
+
+// Keep connection open

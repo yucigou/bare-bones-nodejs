@@ -20,7 +20,11 @@ const mongooseQueue = new MongooseQueue(
 );
 
 mongooseQueue.reset(function (err) {
-  if (err) return done(err);
+  if (err) {
+    console.log('Error', err);
+  } else {
+    console.log('The queue was completely purged of all jobs.');
+  }
 
-  console.log('The queue was completely purged of all jobs.');
+  mongoose.connection.close();
 });
