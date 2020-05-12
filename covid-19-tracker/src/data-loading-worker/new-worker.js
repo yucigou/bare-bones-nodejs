@@ -1,6 +1,7 @@
 'use strict';
 require('dotenv').config();
-const { logger, mongodb, queue } = require('config');
+const { mongodb, queue } = require('config');
+const logger = require('../utils/logger');
 const { consume } = require('../data-accessor');
 
 const handleJob = async (reportDate) => {

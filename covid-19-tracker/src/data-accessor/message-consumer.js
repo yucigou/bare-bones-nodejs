@@ -1,6 +1,7 @@
 'use strict';
 require('dotenv').config();
-const { logger, mongodb, queue } = require('config');
+const { mongodb, queue } = require('config');
+const logger = require('../utils/logger');
 const mongoose = require('mongoose');
 const MongooseQueue = require('mongoose-queue').MongooseQueue;
 require('./models/payload');

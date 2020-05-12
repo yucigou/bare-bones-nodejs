@@ -1,4 +1,4 @@
-const { logger } = require('config');
+const logger = require('../utils/logger');
 const axios = require('axios');
 
 const getSummary = () => {
