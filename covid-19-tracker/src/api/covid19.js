@@ -1,4 +1,4 @@
-const { logger } = require('../utils/logger');
+const { dataLoaderLogger: logger } = require('../utils/logger');
 const axios = require('axios');
 
 const getSummary = () => {

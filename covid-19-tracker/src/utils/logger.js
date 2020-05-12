@@ -6,18 +6,24 @@ const myFormat = printf(({ level, message, label, timestamp }) => {
   return `${timestamp} [${label}] ${level}: ${message}`;
 });
 
-const logger = createLogger({
-  format: combine(label({ label: 'Data Loader' }), timestamp(), myFormat),
-  transports: [
-    new transports.Console(),
-    new transports.DailyRotateFile({
-      dirname: './logs',
-      filename: 'covid-19-tracker.log',
-      datePattern: 'YYYY-MM-DD',
-      zippedArchive: true,
-      maxFiles: '30d',
-    }),
-  ],
+const dailyRotateFileTransport = new transports.DailyRotateFile({
+  dirname: './logs',
+  filename: 'covid-19-tracker.log',
+  datePattern: 'YYYY-MM-DD',
+  zippedArchive: true,
+  maxFiles: '30d',
 });
 
-module.exports = { logger };
+const consoleTransport = new transports.Console();
+
+const dataLoaderLogger = createLogger({
+  format: combine(label({ label: 'Data Loader' }), timestamp(), myFormat),
+  transports: [consoleTransport, dailyRotateFileTransport],
+});
+
+const webServiceLogger = createLogger({
+  format: combine(label({ label: 'Web Service' }), timestamp(), myFormat),
+  transports: [consoleTransport, dailyRotateFileTransport],
+});
+
+module.exports = { dataLoaderLogger, webServiceLogger };
