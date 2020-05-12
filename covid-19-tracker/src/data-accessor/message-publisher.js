@@ -2,32 +2,35 @@
 require('dotenv').config();
 const { logger, mongodb, queue } = require('config');
 const mongoose = require('mongoose');
-var MongooseQueue = require('mongoose-queue').MongooseQueue;
-var Helper = require('./helper.js');
-
-// mongoose.set('debug', true);
-const db = mongoose.connection;
-db.on('error', console.error.bind(console, 'connection error:'));
-db.once('open', function () {
-  logger.info('We are connected!');
-});
-
-mongoose.connect(mongodb.uris, mongodb.connectionOptions);
+const { MongooseQueue } = require('mongoose-queue');
+const Payload = require('./models/payload');
 
 const mongooseQueue = new MongooseQueue(
-  queue.payloadModel,
+  queue.modelName,
   queue.workerId,
   queue.options
 );
 
-var Payload = require('./models/payload-schema');
-var payload = Helper.randomPayload();
+mongoose.connect(mongodb.uris, mongodb.connectionOptions);
 
-mongooseQueue.add(payload, function (err, jobId) {
-  if (err) {
-    console.error(err);
-    return;
-  }
+const db = mongoose.connection;
+db.on('error', console.error.bind(console, 'connection error:'));
+db.once('open', function () {
+  logger.info('We are connected!');
 
-  console.log('jobId', jobId);
+  const payload = new Payload({ reportDate: '2020-04-30' });
+  console.log('Payload: ', payload);
+
+  payload.save().then((saved) => {
+    console.log('Saved: ', saved);
+    mongooseQueue.add(saved, function (err, jobId) {
+      if (err) {
+        console.error(err);
+        return;
+      }
+
+      console.log('jobId', jobId);
+      mongoose.connection.close();
+    });
+  });
 });

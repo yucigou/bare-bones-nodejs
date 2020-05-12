@@ -20,15 +20,19 @@ module.exports = {
       useNewUrlParser: true,
       useUnifiedTopology: true,
       useFindAndModify: false,
+      poolSize: 10,
     },
   },
   queue: {
-    payloadModel: 'payload',
+    modelName: 'payload',
     workerId: 'data-loading-worker',
     options: {
       queueCollection: 'queue',
       blockDuration: 300000,
       maxRetries: 5,
     },
+  },
+  country: {
+    modelName: 'country',
   },
 };

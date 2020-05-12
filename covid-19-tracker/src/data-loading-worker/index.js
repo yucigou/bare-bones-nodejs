@@ -3,7 +3,7 @@ require('dotenv').config();
 const { logger, mongodb, queue } = require('config');
 const mongoose = require('mongoose');
 var MongooseQueue = require('mongoose-queue').MongooseQueue;
-require('../data-accessor/helper');
+require('../data-accessor/models/payload');
 
 const db = mongoose.connection;
 db.on('error', console.error.bind(console, 'connection error:'));
@@ -14,7 +14,7 @@ db.once('open', function () {
 mongoose.connect(mongodb.uris, mongodb.connectionOptions);
 
 const mongooseQueue = new MongooseQueue(
-  queue.payloadModel,
+  queue.modelName,
   queue.workerId,
   queue.options
 );
@@ -22,6 +22,12 @@ const mongooseQueue = new MongooseQueue(
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
+
+const handlePayload = (reportDate) => {
+  // Check if reportDate has already been dealt with
+  // Get the world daily to find all reportDate entries that have not been dealt with, and deal with them
+  // Get the daily stats one by one and put them into each country
+};
 
 const handleQueue = () => {
   return new Promise((resolve, reject) => {
@@ -33,15 +39,14 @@ const handleQueue = () => {
       }
 
       if (!job) {
-        console.log('No job. Next.');
+        console.log('No jobs. Next time.');
         resolve();
         return;
       }
 
-      console.log(job.id);
-      console.log(job.payload);
-      console.log(job.blockedUntil);
-      console.log(job.done);
+      console.log('Job got: ', job);
+
+      console.log('Payload report date: ', job.payload.reportDate);
 
       console.log('Sleeping');
       await sleep(10000);
@@ -54,16 +59,8 @@ const handleQueue = () => {
           return;
         }
 
-        console.log(
-          'The job with id ' + j.id + ' and payload ' + j.payload + ' is done.'
-        );
+        console.log('Job acked: ', j);
 
-        // Print all info returned in job object
-        console.log(j.payload);
-        console.log(j.blockedUntil);
-        console.log(j.done);
-
-        console.log('Resolving');
         resolve();
         console.log('Resolved');
       });
@@ -79,7 +76,7 @@ const loadData = async () => {
     console.log('Error: ', error);
   } finally {
     console.log('Done with the job');
-    setTimeout(loadData, 10000);
+    setTimeout(loadData, 1000);
   }
 };
 

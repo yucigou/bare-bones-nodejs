@@ -2,42 +2,44 @@
 require('dotenv').config();
 const { logger, mongodb, queue } = require('config');
 const mongoose = require('mongoose');
-var MongooseQueue = require('mongoose-queue').MongooseQueue;
-var Helper = require('./helper.js');
-
-// mongoose.set('debug', true);
-const db = mongoose.connection;
-db.on('error', console.error.bind(console, 'connection error:'));
-db.once('open', function () {
-  logger.info('We are connected!');
-});
-
-mongoose.connect(mongodb.uris, mongodb.connectionOptions);
+const MongooseQueue = require('mongoose-queue').MongooseQueue;
+require('./models/payload');
 
 const mongooseQueue = new MongooseQueue(
-  queue.payloadModel,
+  queue.modelName,
   queue.workerId,
   queue.options
 );
 
-mongooseQueue.get(function (err, job) {
-  if (err) return done(err);
+mongoose.connect(mongodb.uris, mongodb.connectionOptions);
 
-  console.log(job.id);
-  console.log(job.payload);
-  console.log(job.blockedUntil);
-  console.log(job.done);
+const db = mongoose.connection;
+db.on('error', console.error.bind(console, 'connection error:'));
+db.once('open', function () {
+  logger.info('We are connected!');
 
-  mongooseQueue.ack(job.id, (err, j) => {
-    if (err) return done(err);
+  mongooseQueue.get(function (err, job) {
+    if (err) {
+      console.log('Error getting: ', err);
+      return;
+    }
 
-    console.log(
-      'The job with id ' + j.id + ' and payload ' + j.payload + ' is done.'
-    );
+    if (!job) {
+      console.log('No more jobs');
+      return;
+    }
 
-    // Print all info returned in job object
-    console.log(j.payload);
-    console.log(j.blockedUntil);
-    console.log(j.done);
+    console.log('Job got: ', job);
+
+    console.log('Payload report date: ', job.payload.reportDate);
+
+    mongooseQueue.ack(job.id, (err, j) => {
+      if (err) {
+        console.log('Error acking: ', err);
+        return;
+      }
+
+      console.log('Job acked: ', j);
+    });
   });
 });

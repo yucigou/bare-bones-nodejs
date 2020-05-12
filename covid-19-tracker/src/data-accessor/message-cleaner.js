@@ -14,7 +14,7 @@ db.once('open', function () {
 mongoose.connect(mongodb.uris, mongodb.connectionOptions);
 
 const mongooseQueue = new MongooseQueue(
-  queue.payloadModel,
+  queue.modelName,
   queue.workerId,
   queue.options
 );

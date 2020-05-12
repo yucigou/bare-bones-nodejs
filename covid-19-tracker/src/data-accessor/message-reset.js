@@ -14,17 +14,18 @@ db.once('open', function () {
 mongoose.connect(mongodb.uris, mongodb.connectionOptions);
 
 const mongooseQueue = new MongooseQueue(
-  queue.payloadModel,
+  queue.modelName,
   queue.workerId,
   queue.options
 );
 
 mongooseQueue.reset(function (err) {
   if (err) {
-    console.log('Error', err);
+    logger.error(`Error: ${err}`);
   } else {
-    console.log('The queue was completely purged of all jobs.');
+    logger.info('The queue was completely purged of all jobs.');
   }
 
   mongoose.connection.close();
+  logger.info('Disconnected!');
 });
