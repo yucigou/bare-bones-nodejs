@@ -1,7 +1,8 @@
 'use strict';
 require('dotenv').config();
 const { mongodb, queue } = require('config');
-const { dataLoaderLogger: logger } = require('../utils/logger');
+const logger = require('../utils/logger')(process.env.PROCESSOR);
+const { isReportDateValid } = require('../utils/validator');
 const mongoose = require('mongoose');
 const { MongooseQueue } = require('mongoose-queue');
 const Payload = require('./models/payload');
@@ -20,13 +21,10 @@ db.once('open', function () {
   logger.info('We are connected!');
 });
 
-const reportDateRegExp = /^[0-9]{4}-[0-9]{2}-[0-9]{2}$/;
-
 // See {"reportDate": "2020-04-29"} in the response of API https://covid19.mathdro.id/api/daily
 // reportDate will be used later to call API https://covid19.mathdro.id/api/daily/2020-04-29
 const publish = (reportDate) => {
-  const valid = reportDateRegExp.test(reportDate);
-  if (!valid) {
+  if (!isReportDateValid(reportDate)) {
     logger.error(`Invalid reportDate: ${reportDate}`);
     return;
   }
@@ -106,7 +104,17 @@ const consume = (handleJob) => {
   });
 };
 
+const isUpdated = async (reportDate) => {
+  // TODO
+};
+
+const updateAllCountries = async (dailyStats) => {
+  // TODO
+};
+
 module.exports = {
   publish,
   consume,
+  isUpdated,
+  updateAllCountries,
 };

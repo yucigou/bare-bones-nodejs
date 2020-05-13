@@ -1,4 +1,6 @@
+const { processor } = require('config');
 const { transports, createLogger, format } = require('winston');
+
 require('winston-daily-rotate-file');
 
 const { combine, timestamp, label, printf } = format;
@@ -17,13 +19,58 @@ const dailyRotateFileTransport = new transports.DailyRotateFile({
 const consoleTransport = new transports.Console();
 
 const dataLoaderLogger = createLogger({
-  format: combine(label({ label: 'Data Loader' }), timestamp(), logFormat),
+  format: combine(
+    label({ label: processor.dataLoader }),
+    timestamp(),
+    logFormat
+  ),
   transports: [consoleTransport, dailyRotateFileTransport],
 });
 
 const webServiceLogger = createLogger({
-  format: combine(label({ label: 'Web Service' }), timestamp(), logFormat),
+  format: combine(
+    label({ label: processor.webService }),
+    timestamp(),
+    logFormat
+  ),
   transports: [consoleTransport, dailyRotateFileTransport],
 });
 
-module.exports = { dataLoaderLogger, webServiceLogger };
+const dataAccessorLogger = createLogger({
+  format: combine(
+    label({ label: processor.dataAccess }),
+    timestamp(),
+    logFormat
+  ),
+  transports: [consoleTransport, dailyRotateFileTransport],
+});
+
+const jobCrontabLogger = createLogger({
+  format: combine(
+    label({ label: processor.jobCrontab }),
+    timestamp(),
+    logFormat
+  ),
+  transports: [consoleTransport, dailyRotateFileTransport],
+});
+
+const defaultLogger = createLogger({
+  format: combine(label({ label: processor.default }), timestamp(), logFormat),
+  transports: [consoleTransport, dailyRotateFileTransport],
+});
+
+const LoggerMap = {
+  [processor.dataLoader]: dataLoaderLogger,
+  [processor.webService]: webServiceLogger,
+  [processor.dataAccess]: dataAccessorLogger,
+  [processor.jobCrontab]: jobCrontabLogger,
+};
+
+const getLogger = (processorName) => {
+  if (processorName in LoggerMap) {
+    return LoggerMap[processorName];
+  }
+  return defaultLogger;
+};
+
+module.exports = getLogger;

@@ -1,5 +1,5 @@
 const express = require('express');
-const { webServiceLogger: logger } = require('../utils/logger');
+const logger = require('../utils/logger')(process.env.PROCESSOR);
 const { publish } = require('../data-accessor');
 const app = express();
 const port = 3000;

@@ -1,4 +1,4 @@
-const { dataLoaderLogger: logger } = require('../utils/logger');
+const logger = require('../utils/logger')(process.env.PROCESSOR);
 const axios = require('axios');
 
 const getSummary = () => {

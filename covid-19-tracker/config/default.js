@@ -22,4 +22,14 @@ module.exports = {
   country: {
     modelName: 'country',
   },
+  processor: {
+    dataLoader: 'Data_Loader',
+    dataAccess: 'DB_Accesser',
+    webService: 'Web_Service',
+    jobCrontab: 'Job_Crontab',
+    default: 'Default LOG',
+  },
+  logger: {
+    labels: [],
+  },
 };
