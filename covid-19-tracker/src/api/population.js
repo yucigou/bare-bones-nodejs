@@ -1,4 +1,4 @@
-const logger = require('../utils/logger')(process.env.PROCESSOR);
+const logger = require('../utils/logger')();
 const axios = require('axios');
 
 // country: e.g., 'India'

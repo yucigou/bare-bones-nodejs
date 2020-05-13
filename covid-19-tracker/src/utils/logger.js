@@ -66,9 +66,9 @@ const LoggerMap = {
   [processor.jobCrontab]: jobCrontabLogger,
 };
 
-const getLogger = (processorName) => {
-  if (processorName in LoggerMap) {
-    return LoggerMap[processorName];
+const getLogger = () => {
+  if (process.env.PROCESSOR in LoggerMap) {
+    return LoggerMap[process.env.PROCESSOR];
   }
   return defaultLogger;
 };

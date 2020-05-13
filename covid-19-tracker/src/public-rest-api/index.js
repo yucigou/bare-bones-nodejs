@@ -1,5 +1,5 @@
 const express = require('express');
-const logger = require('../utils/logger')(process.env.PROCESSOR);
+const logger = require('../utils/logger')();
 const { publish } = require('../data-accessor');
 const app = express();
 const port = 3000;
