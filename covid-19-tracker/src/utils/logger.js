@@ -73,4 +73,4 @@ const getLogger = () => {
   return defaultLogger;
 };
 
-module.exports = getLogger;
+module.exports = getLogger();

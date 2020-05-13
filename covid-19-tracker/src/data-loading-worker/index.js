@@ -1,7 +1,7 @@
 'use strict';
 require('dotenv').config();
 const { mongodb, queue } = require('config');
-const logger = require('../utils/logger')();
+const logger = require('../utils/logger');
 const { isReportDateValid } = require('../utils/validator');
 const mapSeries = require('../utils/map-series');
 const { consume, isUpdated, updateAllCountries } = require('../data-accessor');
