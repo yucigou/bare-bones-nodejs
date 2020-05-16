@@ -1,11 +1,16 @@
-const { processor } = require('config');
+const {
+  processor,
+  logger: { level },
+} = require('config');
 const { transports, createLogger, format } = require('winston');
 
 require('winston-daily-rotate-file');
 
 const { combine, timestamp, label, printf } = format;
 const logFormat = printf(({ level, message, label, timestamp }) => {
-  return `${timestamp} [${label}] ${level}: ${message}`;
+  return `${timestamp} [${label.toUpperCase()}] [${level
+    .toUpperCase()
+    .padStart(5, ' ')}]: ${message}`;
 });
 
 const dailyRotateFileTransport = new transports.DailyRotateFile({
@@ -25,6 +30,7 @@ const dataLoaderLogger = createLogger({
     logFormat
   ),
   transports: [consoleTransport, dailyRotateFileTransport],
+  level,
 });
 
 const webServiceLogger = createLogger({
@@ -34,6 +40,7 @@ const webServiceLogger = createLogger({
     logFormat
   ),
   transports: [consoleTransport, dailyRotateFileTransport],
+  level,
 });
 
 const dataAccessorLogger = createLogger({
@@ -43,6 +50,7 @@ const dataAccessorLogger = createLogger({
     logFormat
   ),
   transports: [consoleTransport, dailyRotateFileTransport],
+  level,
 });
 
 const jobCrontabLogger = createLogger({
@@ -52,11 +60,13 @@ const jobCrontabLogger = createLogger({
     logFormat
   ),
   transports: [consoleTransport, dailyRotateFileTransport],
+  level,
 });
 
 const defaultLogger = createLogger({
   format: combine(label({ label: processor.default }), timestamp(), logFormat),
   transports: [consoleTransport, dailyRotateFileTransport],
+  level,
 });
 
 const LoggerMap = {

@@ -29,6 +29,7 @@ const DailySchema = new Schema({
 const CountrySchema = new Schema({
   name: {
     type: String,
+    unique: true,
     required: true,
     index: true,
   },
@@ -40,25 +41,26 @@ const CountrySchema = new Schema({
     type: String,
     required: false,
   },
+  aliases: [String],
   population: {
     type: Number,
     required: false,
   },
   lat: {
     type: String,
-    required: true,
+    required: false,
   },
   long: {
     type: String,
-    required: true,
+    required: false,
   },
   lastUpdate: {
-    type: Date,
-    required: true,
+    type: String,
+    required: false,
   },
   lastReportDate: {
     type: String,
-    required: true,
+    required: false,
   },
   dailyStats: [DailySchema],
 });

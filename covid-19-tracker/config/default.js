@@ -30,6 +30,6 @@ module.exports = {
     default: 'Default LOG',
   },
   logger: {
-    labels: [],
+    level: 'debug',
   },
 };

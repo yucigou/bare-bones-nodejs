@@ -6,6 +6,7 @@ const { isReportDateValid } = require('../utils/validator');
 const mongoose = require('mongoose');
 const { MongooseQueue } = require('mongoose-queue');
 const Payload = require('./models/payload');
+const Country = require('./models/country');
 
 const mongooseQueue = new MongooseQueue(
   queue.modelName,
@@ -104,13 +105,32 @@ const consume = (handleJob) => {
   });
 };
 
-const isUpdated = async (reportDate) => {
-  // TODO
+/*
+ * Read any country from the DB
+ * Compare the date
+ */
+const isUpdated = (reportDate) => {
+  return new Promise((resolve, reject) => {
+    Country.findOne({}, (err, country) => {
+      if (err) {
+        logger.error(`Error finding a country: ${err}`);
+        reject();
+      }
+
+      if (!country) {
+        resolve(false);
+      } else {
+        resolve(new Date(reportDate) <= new Date(country.lastReportDate));
+      }
+    });
+  });
 };
 
-const updateAllCountries = async (dailyStats) => {
-  // TODO
-};
+// TODO
+/*
+ *
+ */
+const updateAllCountries = async (dailyStats) => {};
 
 module.exports = {
   publish,
