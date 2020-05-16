@@ -62,6 +62,11 @@ const CountrySchema = new Schema({
     type: String,
     required: false,
   },
+  newlyAdded: {
+    type: Boolean,
+    required: false,
+    default: false,
+  },
   dailyStats: [DailySchema],
 });
 

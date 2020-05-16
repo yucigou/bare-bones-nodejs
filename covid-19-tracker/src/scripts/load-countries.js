@@ -10,7 +10,11 @@ const {
   getWorldDaily,
 } = require('../api/covid19');
 const mapSeries = require('../utils/map-series');
-const { extraCountries } = require('../utils/country');
+const {
+  extraCountries,
+  curateCountryName,
+  processNewCountryName,
+} = require('../utils/country');
 
 mongoose.connect(mongodb.uris, mongodb.connectionOptions);
 
@@ -34,22 +38,50 @@ db.once('open', async () => {
       staged,
       reportDate
     );
-    await updateCountriesToDB(updatedCountries);
+    await updateCountriesToDB(allCountries, updatedCountries, reportDate);
     logger.info(`Finish adding stats for ${reportDate}`);
   });
 
   mongoose.connection.close();
 });
 
+const findReportDate = (allCountries, countryName, reportDate) => {
+  return allCountries.find((c) => {
+    if (c.name.toUpperCase() === countryName.toUpperCase()) {
+      if (c.dailyStats) {
+        return c.dailyStats.find((stats) => stats.reportDate === reportDate);
+      }
+    }
+    return false;
+  });
+};
+
 // Add stats to the dailyStats array
-const updateCountriesToDB = async (updatedCountries) => {
+const updateCountriesToDB = async (
+  allCountries,
+  updatedCountries,
+  reportDate
+) => {
   const countryNames = Object.keys(updatedCountries);
   await mapSeries(countryNames, async (countryName) => {
-    await Country.findOneAndUpdate(
-      { name: countryName },
-      { $push: { dailyStats: updatedCountries[countryName] } },
-      { new: true }
-    );
+    if (!findReportDate(allCountries, countryName, reportDate)) {
+      if (updatedCountries[countryName].newlyAdded) {
+        await Country.findOneAndUpdate(
+          { name: countryName },
+          {
+            $set: { newlyAdded: true },
+            $push: { dailyStats: updatedCountries[countryName].stats },
+          },
+          { upsert: true }
+        );
+      } else {
+        await Country.findOneAndUpdate(
+          { name: countryName },
+          { $push: { dailyStats: updatedCountries[countryName].stats } },
+          { upsert: true }
+        );
+      }
+    }
   });
 
   return;
@@ -119,15 +151,6 @@ const combineCountryRegions = (dailyStats) => {
   return staged;
 };
 
-const COUNTRY_NOT_FOUND = [];
-const isCountryAlreadyMissed = (country) => {
-  if (COUNTRY_NOT_FOUND.length <= 0) {
-    return false;
-  }
-  const regex = new RegExp(COUNTRY_NOT_FOUND.join('|'), 'i');
-  return regex.test(country);
-};
-
 /* Pipeline Stage 2: Combine all aliases of a country */
 const comebineCountryAliases = (allCountries, staged, reportDate) => {
   const countryUpdated = {};
@@ -135,27 +158,22 @@ const comebineCountryAliases = (allCountries, staged, reportDate) => {
   countryRegions.forEach((countryRegion) => {
     const stats = staged[countryRegion];
     stats.reportDate = reportDate;
-    const country = findCountry(allCountries, countryRegion);
+    let country = findCountry(allCountries, countryRegion);
     if (!country) {
-      if (!isCountryAlreadyMissed(country)) {
-        COUNTRY_NOT_FOUND.push(country);
-        const errMsg = `${countryRegion} not found in the DB`;
-        logger.error(errMsg);
-      }
-
-      // const errMsg = `${countryRegion} not found in the DB`;
-      // logger.error(errMsg);
-      // throw new Error(errMsg);
-      return;
+      logger.warn(`${countryRegion} not found in the DB`);
+      country = {
+        name: processNewCountryName(countryRegion),
+        newlyAdded: true,
+      };
     }
 
     if (country.name in countryUpdated) {
-      countryUpdated[country.name].confirmed += stats.confirmed;
-      countryUpdated[country.name].recovered += stats.recovered;
-      countryUpdated[country.name].deaths += stats.deaths;
-      countryUpdated[country.name].active += stats.active;
+      countryUpdated[country.name].stats.confirmed += stats.confirmed;
+      countryUpdated[country.name].stats.recovered += stats.recovered;
+      countryUpdated[country.name].stats.deaths += stats.deaths;
+      countryUpdated[country.name].stats.active += stats.active;
     } else {
-      countryUpdated[country.name] = stats;
+      countryUpdated[country.name] = { newlyAdded: country.newlyAdded, stats };
     }
   });
   return countryUpdated;
@@ -163,113 +181,15 @@ const comebineCountryAliases = (allCountries, staged, reportDate) => {
 
 const findCountry = (allCountries, countryRegion) => {
   return allCountries.find((country) => {
-    if (country.aliases && country.aliases.length > 0) {
-      const regex = new RegExp(country.aliases.join('|'), 'i');
+    if (country.aliases) {
       return (
         country.name.toUpperCase() === countryRegion.toUpperCase() ||
-        regex.test(countryRegion)
+        country.aliases.find(
+          (alias) => alias.toUpperCase() === countryRegion.toUpperCase()
+        )
       );
     } else {
       return country.name.toUpperCase() === countryRegion.toUpperCase();
     }
   });
-};
-
-const curateCountryName = ({ name, iso2, iso3 }) => {
-  if (name === 'Bahamas') {
-    return {
-      name,
-      iso2,
-      iso3,
-      aliases: ['The Bahamas'],
-    };
-  }
-  if (name === 'China') {
-    return {
-      name,
-      iso2,
-      iso3,
-      aliases: [
-        'Mainland China',
-        'Hong Kong',
-        'Hong Kong SAR',
-        'Macau',
-        'Macao SAR',
-      ],
-    };
-  }
-  if (name === 'Congo (Brazzaville)') {
-    return {
-      name,
-      iso2,
-      iso3,
-      aliases: ['Republic of the Congo'],
-    };
-  }
-  if (name === 'Iran') {
-    return {
-      name,
-      iso2,
-      iso3,
-      aliases: ['Iran (Islamic Republic of)'],
-    };
-  }
-  if (name === 'Ireland') {
-    return {
-      name,
-      iso2,
-      iso3,
-      aliases: ['Republic of Ireland'],
-    };
-  }
-  if (name === 'Korea, South') {
-    return {
-      name: 'South Korea',
-      iso2,
-      iso3,
-      aliases: [name, 'Republic of Korea'],
-    };
-  }
-  if (name === 'Moldova') {
-    return {
-      name,
-      iso2,
-      iso3,
-      aliases: ['Republic of Moldova'],
-    };
-  }
-  if (name === 'Russia') {
-    return {
-      name,
-      iso2,
-      iso3,
-      aliases: ['Russian Federation'],
-    };
-  }
-  if (name.match(/Taiwan/)) {
-    return {
-      name: 'Taiwan',
-      iso2,
-      iso3,
-      aliases: ['Taiwan*', 'Taipei and environs'],
-    };
-  }
-  if (name === 'United Kingdom') {
-    return {
-      name,
-      iso2,
-      iso3,
-      aliases: ['UK', 'North Ireland'],
-    };
-  }
-  if (name === 'Vietnam') {
-    return {
-      name,
-      iso2,
-      iso3,
-      aliases: ['Viet Nam'],
-    };
-  }
-
-  return { name: name.trim(), iso2, iso3 };
 };

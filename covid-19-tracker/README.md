@@ -21,3 +21,18 @@ $ docker exec -it 295dbd867cc0 bash
 > db.courses.findOne()
 > db.courses.find()
 ```
+
+## Robo 3T
+
+```
+db.getCollection('countries').find({})
+db.getCollection('countries').find({iso2: "US"})
+db.getCollection('countries').find({"iso2": "US"})
+
+db.getCollection('countries').remove({})
+db.countries.remove({})
+
+db.getCollection('countries').drop()
+
+db.getCollection('countries').stats()
+```
