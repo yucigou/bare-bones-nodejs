@@ -29,7 +29,7 @@ const shallPublish = (countryStats, mostRecentDate) => {
 app.get('/api/daily/:country/:mostRecentDate?', async (req, res) => {
   const { country, mostRecentDate } = req.params;
   const countryStats = await getCountryDailyStats(country);
-  if (shallPublish(mostRecentDate)) {
+  if (shallPublish(countryStats, mostRecentDate)) {
     // Send a message to the data loading worker to check if the daily stats of countries are up-to-date.
     publish(mostRecentDate);
     logger.info(`Published request for ${req.params.mostRecentDate}`);
