@@ -1,4 +1,4 @@
-version: '3'
+version: '3.4'
 
 services:
   mongo:
@@ -10,6 +10,12 @@ services:
       - '27017:27017'
     volumes:
       - ~/local-volume/mongo-data:/data/db
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongo mongo:27017/test --quiet 1
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
 
   mailer:
     image: namshi/smtp
@@ -22,6 +28,7 @@ services:
     build:
       context: .
       dockerfile: ./Dockerfile
+    command: sh -c "./wrapperScript.sh"
     depends_on:
       - mongo
       - mailer

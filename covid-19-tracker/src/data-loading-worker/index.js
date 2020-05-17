@@ -6,6 +6,7 @@ const { isReportDateValid } = require('../utils/date');
 const mapSeries = require('../utils/map-series');
 const { consume, isUpdated, updateAllCountries } = require('../data-accessor');
 const { getWorldDaily, getDailyStats } = require('../api/covid19');
+const { addDailyStats } = require('./accessory');
 
 // Update every country with reportDate
 const updateWith = async (reportDate) => {
@@ -28,6 +29,9 @@ const handleJob = async (reportDate) => {
     throw new Error(`Invalid reportDate: ${reportDate}`);
   }
 
+  await addDailyStats(reportDate);
+
+  /*
   // Check if reportDate has already been dealt with
   if (await isUpdated(reportDate)) {
     logger.info(`Our repo is updated for ${reportDate}`);
@@ -38,6 +42,7 @@ const handleJob = async (reportDate) => {
   const reportDates = worldDaily.map((daily) => daily.reportDate);
   // Get the world daily to find all reportDate entries that have not been dealt with, and deal with them
   await mapSeries(reportDates, updateWith);
+  */
 };
 
 const loadData = async () => {
@@ -48,7 +53,7 @@ const loadData = async () => {
     logger.error(`Error consuming the job queue: ${error}`);
   } finally {
     logger.info('Done with the job');
-    setTimeout(loadData, 10000);
+    setTimeout(loadData, 60000);
   }
 };
 

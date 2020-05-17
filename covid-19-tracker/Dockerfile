@@ -21,4 +21,4 @@ COPY src src
 
 EXPOSE 3000
 
-CMD [ "pm2", "start", "src/pm2.config.js" ]
+CMD []

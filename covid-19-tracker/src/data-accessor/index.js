@@ -2,7 +2,9 @@
 require('dotenv').config();
 const { mongodb, queue } = require('config');
 const logger = require('../utils/logger');
+const mapSeries = require('../utils/map-series');
 const { isReportDateValid } = require('../utils/date');
+const { curateCountryName } = require('../utils/country');
 const mongoose = require('mongoose');
 const { MongooseQueue } = require('mongoose-queue');
 const Payload = require('./models/payload');
@@ -22,6 +24,16 @@ db.on('error', console.error.bind(console, 'connection error:'));
 db.once('open', function () {
   logger.info('We are connected!');
 });
+
+const cleanQueue = () => {
+  mongooseQueue.clean((err) => {
+    if (err) {
+      logger.error(`Error cleaning the message queue: ${err}`);
+    } else {
+      logger.info('The message queue has been successfully cleaned.');
+    }
+  });
+};
 
 // See {"reportDate": "2020-04-29"} in the response of API https://covid19.mathdro.id/api/daily
 // reportDate will be used later to call API https://covid19.mathdro.id/api/daily/2020-04-29
@@ -111,7 +123,9 @@ const consume = (handleJob) => {
  */
 const isUpdated = async (reportDate) => {
   const metadata = await MetaData.findOne({});
-  return new Date(reportDate) <= new Date(metadata.latestReportDate);
+  return (
+    metadata && new Date(reportDate) <= new Date(metadata.latestReportDate)
+  );
 };
 
 const updateMetadata = async (reportDate) => {
@@ -121,12 +135,6 @@ const updateMetadata = async (reportDate) => {
     { upsert: true }
   );
 };
-
-// TODO
-/*
- *
- */
-const updateAllCountries = async (dailyStats) => {};
 
 const getCountryDailyStats = async (countryName) => {
   const country = await Country.findOne(
@@ -143,19 +151,113 @@ const getCountryDailyStats = async (countryName) => {
   return country;
 };
 
-const getAllCountries = async () => {
+const getAllCountryNames = async () => {
   const country = await Country.find({}, '-_id name', {
     sort: { name: 1 },
   });
   return country;
 };
 
+const getAllCountries = async () => {
+  const country = await Country.find({});
+  return country;
+};
+
+const saveCountryNames = async (countryNames) => {
+  await mapSeries(countryNames, async (countryName) => {
+    const curatedCountryName = curateCountryName(countryName);
+    await Country.findOneAndUpdate(
+      { name: curatedCountryName.name },
+      curatedCountryName,
+      {
+        upsert: true,
+      }
+    );
+  });
+};
+
+const findReportDate = (allCountries, countryName, reportDate) => {
+  return allCountries.find((c) => {
+    if (c.name.toUpperCase() === countryName.toUpperCase()) {
+      if (c.dailyStats) {
+        return c.dailyStats.find((stats) => stats.reportDate === reportDate);
+      }
+    }
+    return false;
+  });
+};
+
+// Add stats to the dailyStats array
+const updateCountriesToDB = async (
+  allCountries,
+  updatedCountries,
+  reportDate
+) => {
+  const countryNames = Object.keys(updatedCountries);
+  await mapSeries(countryNames, async (countryName) => {
+    // Skip reportDate if already added
+    if (!findReportDate(allCountries, countryName, reportDate)) {
+      if (updatedCountries[countryName].newlyAdded) {
+        await Country.findOneAndUpdate(
+          {
+            name: countryName,
+          },
+          {
+            $set: {
+              newlyAdded: true,
+              lastUpdate: updatedCountries[countryName].lastUpdate,
+            },
+            $push: {
+              dailyStats: updatedCountries[countryName].stats,
+            },
+          },
+          {
+            upsert: true,
+          }
+        );
+      } else {
+        await Country.findOneAndUpdate(
+          {
+            name: countryName,
+          },
+          {
+            $set: {
+              lastUpdate: updatedCountries[countryName].lastUpdate,
+            },
+            $push: {
+              dailyStats: updatedCountries[countryName].stats,
+            },
+          },
+          {
+            upsert: true,
+          }
+        );
+      }
+    }
+  });
+
+  return;
+};
+
+const getLatestReportDate = async () => {
+  const metadata = await MetaData.findOne({});
+  if (!metadata) {
+    return null;
+  }
+  return metadata.latestReportDate;
+};
+
 module.exports = {
-  publish,
+  cleanQueue,
   consume,
-  isUpdated,
-  updateAllCountries,
+  db,
   getCountryDailyStats,
+  getAllCountryNames,
   getAllCountries,
+  getLatestReportDate,
+  isUpdated,
+  publish,
+  saveCountryNames,
+  updateCountriesToDB,
   updateMetadata,
 };

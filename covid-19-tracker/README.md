@@ -14,3 +14,8 @@ MAILER_TO=xxx@example.com
 
 WS_PORT=3000
 ```
+
+# How to use
+
+- Step 1: Seed the database if not yet
+- Step 2: Start pm2

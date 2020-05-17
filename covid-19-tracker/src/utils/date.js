@@ -1,3 +1,5 @@
+const { covid19 } = require('config');
+const { getWorldDaily } = require('../api/covid19');
 const reportDateRegExp = /^[0-9]{4}-[0-9]{2}-[0-9]{2}$/;
 
 // See {"reportDate": "2020-04-29"} in the response of API https://covid19.mathdro.id/api/daily
@@ -28,14 +30,29 @@ const isDateAcceptable = (date) => {
   if (!isReportDateValid(date)) {
     return false;
   }
-  const dateToCheck = new Date(date);
   const todayDate = getToday();
-  const today = new Date(todayDate);
-  const theDayBeforeYesterday = new Date(getTheDayBeforeYesterday(todayDate));
-  return dateToCheck <= today && dateToCheck >= theDayBeforeYesterday;
+  return new Date(date) <= new Date(todayDate);
+};
+
+const getNextDate = (reportDate) => {
+  const date = new Date(reportDate);
+  date.setDate(date.getDate() + 1);
+  return formatDate(date);
+};
+
+const getLatestReportDateFromAPI = async () => {
+  const worldDaily = await getWorldDaily();
+  return worldDaily.reduce(
+    (a, b) => {
+      return a.reportDate > b.reportDate ? a : b;
+    },
+    { reportDate: covid19.earliestReportDate }
+  );
 };
 
 module.exports = {
+  getLatestReportDateFromAPI,
+  getNextDate,
   isDateAcceptable,
   isReportDateValid,
 };

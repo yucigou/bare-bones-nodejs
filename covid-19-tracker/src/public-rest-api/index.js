@@ -6,7 +6,7 @@ const { transformCountryList, sortDailyStats } = require('./transformer');
 const {
   publish,
   getCountryDailyStats,
-  getAllCountries,
+  getAllCountryNames,
 } = require('../data-accessor');
 const app = express();
 const port = process.env.WS_PORT || 3000;
@@ -39,6 +39,8 @@ app.get('/api/daily/:region/:mostRecentDate?', async (req, res) => {
     // Send a message to the data loading worker to check if the daily stats of countries are up-to-date.
     publish(mostRecentDate);
     logger.info(`Published request for ${req.params.mostRecentDate}`);
+  } else {
+    logger.info(`No need to publish request for ${req.params.mostRecentDate}`);
   }
   if (countryStats) {
     res.json(sortDailyStats(countryStats));
@@ -48,7 +50,7 @@ app.get('/api/daily/:region/:mostRecentDate?', async (req, res) => {
 });
 
 app.get('/api/regions', async (req, res) => {
-  const regions = await getAllCountries();
+  const regions = await getAllCountryNames();
   const countryNameList = transformCountryList(regions);
   res.json(countryNameList);
 });

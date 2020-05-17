@@ -34,4 +34,7 @@ module.exports = {
   logger: {
     level: 'debug',
   },
+  covid19: {
+    earliestReportDate: '2020-01-22',
+  },
 };

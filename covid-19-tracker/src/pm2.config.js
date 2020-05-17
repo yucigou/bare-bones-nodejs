@@ -6,7 +6,7 @@ const pm2Config = {
       exec_mode: 'cluster_mode',
       instances: 1,
       env: {
-        APP_NAME: 'dataLoadingWorker',
+        PROCESSOR: 'Data_Loader',
       },
     },
     {
@@ -15,7 +15,7 @@ const pm2Config = {
       exec_mode: 'cluster_mode',
       instances: 1,
       env: {
-        APP_NAME: 'jobScheduler',
+        PROCESSOR: 'Job_Crontab',
       },
     },
     {
@@ -24,7 +24,7 @@ const pm2Config = {
       exec_mode: 'cluster_mode',
       instances: 1,
       env: {
-        APP_NAME: 'webService',
+        PROCESSOR: 'Web_Service',
       },
     },
   ],
