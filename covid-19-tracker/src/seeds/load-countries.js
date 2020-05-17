@@ -4,6 +4,8 @@ const { mongodb, processor } = require('config');
 const logger = require('../utils/logger');
 const mongoose = require('mongoose');
 const Country = require('../data-accessor/models/country');
+const Metadata = require('../data-accessor/models/metadata');
+const { updateMetadata } = require('../data-accessor/index');
 const {
   getCountryNames,
   getDailyStats,
@@ -40,6 +42,7 @@ db.once('open', async () => {
       reportDate
     );
     await updateCountriesToDB(allCountries, updatedCountries, reportDate);
+    await updateMetadata(reportDate);
     logger.info(`Finish adding stats for ${reportDate}`);
   });
 
@@ -70,7 +73,10 @@ const updateCountriesToDB = async (
         await Country.findOneAndUpdate(
           { name: countryName },
           {
-            $set: { newlyAdded: true },
+            $set: {
+              newlyAdded: true,
+              lastUpdate: updatedCountries[countryName].lastUpdate,
+            },
             $push: { dailyStats: updatedCountries[countryName].stats },
           },
           { upsert: true }
@@ -78,7 +84,12 @@ const updateCountriesToDB = async (
       } else {
         await Country.findOneAndUpdate(
           { name: countryName },
-          { $push: { dailyStats: updatedCountries[countryName].stats } },
+          {
+            $set: {
+              lastUpdate: updatedCountries[countryName].lastUpdate,
+            },
+            $push: { dailyStats: updatedCountries[countryName].stats },
+          },
           { upsert: true }
         );
       }
@@ -121,7 +132,7 @@ const getAllCountriesFromDB = async () => {
 const getAllDatesAvailableFromAPI = async () => {
   const worldDaily = await getWorldDaily();
   const allDatesAvailable = worldDaily.map((daily) => daily.reportDate);
-  return allDatesAvailable;
+  return allDatesAvailable.sort((a, b) => (a > b ? 1 : -1));
 };
 
 /* Pipeline Stage 1: Combine all regions of a country */
@@ -176,7 +187,11 @@ const comebineCountryAliases = (allCountries, staged, reportDate) => {
       countryUpdated[country.name].stats.deaths += stats.deaths;
       countryUpdated[country.name].stats.active += stats.active;
     } else {
-      countryUpdated[country.name] = { newlyAdded: country.newlyAdded, stats };
+      countryUpdated[country.name] = {
+        newlyAdded: country.newlyAdded,
+        stats,
+        lastUpdate: stats.lastUpdate,
+      };
     }
   });
   return countryUpdated;

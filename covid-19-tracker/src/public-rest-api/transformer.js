@@ -6,7 +6,7 @@ const sortDailyStats = ({ name, dailyStats }) => {
   return {
     name,
     dailyStats: dailyStats.sort((a, b) =>
-      a.dailyStats > b.dailyStats ? -1 : 1
+      a.reportDate > b.reportDate ? 1 : -1
     ),
   };
 };

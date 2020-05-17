@@ -7,6 +7,7 @@ const mongoose = require('mongoose');
 const { MongooseQueue } = require('mongoose-queue');
 const Payload = require('./models/payload');
 const Country = require('./models/country');
+const MetaData = require('../data-accessor/models/metadata');
 
 const mongooseQueue = new MongooseQueue(
   queue.modelName,
@@ -106,24 +107,19 @@ const consume = (handleJob) => {
 };
 
 /*
- * Read any country from the DB
- * Compare the date
+ * true: already updated for the given reportDate
  */
-const isUpdated = (reportDate) => {
-  return new Promise((resolve, reject) => {
-    Country.findOne({}, (err, country) => {
-      if (err) {
-        logger.error(`Error finding a country: ${err}`);
-        reject();
-      }
+const isUpdated = async (reportDate) => {
+  const metadata = await MetaData.findOne({});
+  return new Date(reportDate) <= new Date(metadata.latestReportDate);
+};
 
-      if (!country) {
-        resolve(false);
-      } else {
-        resolve(new Date(reportDate) <= new Date(country.lastReportDate));
-      }
-    });
-  });
+const updateMetadata = async (reportDate) => {
+  await MetaData.findOneAndUpdate(
+    {},
+    { $set: { latestReportDate: reportDate } },
+    { upsert: true }
+  );
 };
 
 // TODO
@@ -161,4 +157,5 @@ module.exports = {
   updateAllCountries,
   getCountryDailyStats,
   getAllCountries,
+  updateMetadata,
 };

@@ -58,10 +58,6 @@ const CountrySchema = new Schema({
     type: String,
     required: false,
   },
-  lastReportDate: {
-    type: String,
-    required: false,
-  },
   newlyAdded: {
     type: Boolean,
     required: false,
