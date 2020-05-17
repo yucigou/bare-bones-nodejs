@@ -63,6 +63,16 @@ const jobCrontabLogger = createLogger({
   level,
 });
 
+const seedsLogger = createLogger({
+  format: combine(
+    label({ label: processor.seedCountry }),
+    timestamp(),
+    logFormat
+  ),
+  transports: [consoleTransport, dailyRotateFileTransport],
+  level,
+});
+
 const defaultLogger = createLogger({
   format: combine(label({ label: processor.default }), timestamp(), logFormat),
   transports: [consoleTransport, dailyRotateFileTransport],
@@ -74,6 +84,7 @@ const LoggerMap = {
   [processor.webService]: webServiceLogger,
   [processor.dataAccess]: dataAccessorLogger,
   [processor.jobCrontab]: jobCrontabLogger,
+  [processor.seedCountry]: seedsLogger,
 };
 
 const getLogger = () => {

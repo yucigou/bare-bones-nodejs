@@ -19,13 +19,13 @@ const extraCountries = [
   { name: 'Mayotte' },
   { name: 'Others', aliases: ['Cruise Ship'] },
   {
-    name: 'Palestinian',
-    aliases: ['occupied Palestinian territory', 'Palestine'],
+    name: 'Palestine',
+    aliases: ['occupied Palestinian territory', 'Palestinian'],
   },
   { name: 'Puerto Rico' },
   { name: 'Reunion' },
   { name: 'Saint Barthelemy' },
-  { name: 'St. Martin', aliases: ['Saint Martin'] },
+  { name: 'Saint Martin', aliases: ['St. Martin'] },
   { name: 'Vatican City' },
 ];
 
@@ -124,6 +124,14 @@ const curateCountryName = ({ name, iso2, iso3, aliases }) => {
       iso2,
       iso3,
       aliases: ['UK', 'North Ireland'],
+    };
+  }
+  if (name === 'US') {
+    return {
+      name: 'United States',
+      iso2,
+      iso3,
+      aliases: ['US', 'USA'],
     };
   }
   if (name === 'Vietnam') {

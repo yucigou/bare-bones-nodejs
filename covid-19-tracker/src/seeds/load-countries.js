@@ -1,6 +1,6 @@
 'use strict';
 require('dotenv').config();
-const { mongodb } = require('config');
+const { mongodb, processor } = require('config');
 const logger = require('../utils/logger');
 const mongoose = require('mongoose');
 const Country = require('../data-accessor/models/country');
@@ -161,7 +161,9 @@ const comebineCountryAliases = (allCountries, staged, reportDate) => {
     stats.reportDate = reportDate;
     let country = findCountry(allCountries, countryRegion);
     if (!country) {
-      logger.warn(`${countryRegion} not found in the DB`);
+      const warning = `${countryRegion} not found in the DB`;
+      logger.warn(warning);
+      sendMail({ subject: processor.seedCountry, text: warning });
       country = {
         name: processNewCountryName(countryRegion),
         newlyAdded: true,

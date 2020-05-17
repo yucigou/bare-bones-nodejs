@@ -11,4 +11,6 @@ MAILER_SERVER=localhost
 MAILER_PORT=25
 MAILER_FROM=xxx@example.com
 MAILER_TO=xxx@example.com
+
+WS_PORT=3000
 ```

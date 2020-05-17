@@ -1,9 +1,15 @@
+require('dotenv').config();
 const express = require('express');
 const logger = require('../utils/logger');
 const { isDateAcceptable } = require('../utils/date');
-const { publish, getCountryDailyStats } = require('../data-accessor');
+const { transformCountryList } = require('./transformer');
+const {
+  publish,
+  getCountryDailyStats,
+  getAllCountries,
+} = require('../data-accessor');
 const app = express();
-const port = 3000;
+const port = process.env.WS_PORT || 3000;
 
 const shallPublish = (countryStats, mostRecentDate) => {
   if (!countryStats) {
@@ -35,6 +41,12 @@ app.get('/api/daily/:country/:mostRecentDate?', async (req, res) => {
     logger.info(`Published request for ${req.params.mostRecentDate}`);
   }
   res.json(countryStats);
+});
+
+app.get('/api/regions', async (req, res) => {
+  const regions = await getAllCountries();
+  const countryNameList = transformCountryList(regions);
+  res.json(countryNameList);
 });
 
 app.listen(port, () =>

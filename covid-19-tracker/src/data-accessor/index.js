@@ -134,9 +134,21 @@ const updateAllCountries = async (dailyStats) => {};
 
 const getCountryDailyStats = async (countryName) => {
   const country = await Country.findOne(
-    { name: countryName },
+    {
+      $or: [
+        { name: countryName },
+        // { aliases: countryName },
+        // { iso2: countryName },
+        // { iso3: countryName },
+      ],
+    },
     '-_id name dailyStats.confirmed dailyStats.recovered dailyStats.deaths dailyStats.active dailyStats.reportDate'
   );
+  return country;
+};
+
+const getAllCountries = async () => {
+  const country = await Country.find({}, '-_id name');
   return country;
 };
 
@@ -146,4 +158,5 @@ module.exports = {
   isUpdated,
   updateAllCountries,
   getCountryDailyStats,
+  getAllCountries,
 };

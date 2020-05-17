@@ -27,6 +27,7 @@ module.exports = {
     dataAccess: 'DB_Accesser',
     webService: 'Web_Service',
     jobCrontab: 'Job_Crontab',
+    seedCountry: 'SeedCountry',
     default: 'Default LOG',
   },
   logger: {
