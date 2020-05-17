@@ -2,7 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const logger = require('../utils/logger');
 const { isDateAcceptable } = require('../utils/date');
-const { transformCountryList } = require('./transformer');
+const { transformCountryList, sortDailyStats } = require('./transformer');
 const {
   publish,
   getCountryDailyStats,
@@ -29,18 +29,22 @@ const shallPublish = (countryStats, mostRecentDate) => {
 };
 
 /*
- * /api/daily/[country]/[mostRecentDate]
+ * /api/daily/[region]/[mostRecentDate]
  * Example: http://localhost:3000/api/daily/USA/2020-05-11
  */
-app.get('/api/daily/:country/:mostRecentDate?', async (req, res) => {
-  const { country, mostRecentDate } = req.params;
-  const countryStats = await getCountryDailyStats(country);
+app.get('/api/daily/:region/:mostRecentDate?', async (req, res) => {
+  const { region, mostRecentDate } = req.params;
+  const countryStats = await getCountryDailyStats(region);
   if (shallPublish(countryStats, mostRecentDate)) {
     // Send a message to the data loading worker to check if the daily stats of countries are up-to-date.
     publish(mostRecentDate);
     logger.info(`Published request for ${req.params.mostRecentDate}`);
   }
-  res.json(countryStats);
+  if (countryStats) {
+    res.json(sortDailyStats(countryStats));
+  } else {
+    res.json({});
+  }
 });
 
 app.get('/api/regions', async (req, res) => {

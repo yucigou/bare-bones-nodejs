@@ -148,7 +148,9 @@ const getCountryDailyStats = async (countryName) => {
 };
 
 const getAllCountries = async () => {
-  const country = await Country.find({}, '-_id name');
+  const country = await Country.find({}, '-_id name', {
+    sort: { name: 1 },
+  });
   return country;
 };
 
