@@ -1,4 +1,4 @@
-const { getSummary, getDailyStats } = require('./covid19');
+const { getSummary, getDailyStats } = require('../covid19');
 
 (async () => {
   const summary = await getSummary();

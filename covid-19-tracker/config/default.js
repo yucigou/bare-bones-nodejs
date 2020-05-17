@@ -2,7 +2,7 @@ require('dotenv').config();
 
 module.exports = {
   mongodb: {
-    uris: `mongodb://${process.env.MONGO_INITDB_ROOT_USERNAME}:${process.env.MONGO_INITDB_ROOT_PASSWORD}@localhost:27017/covid19?authSource=admin`,
+    uris: `mongodb://${process.env.MONGO_INITDB_ROOT_USERNAME}:${process.env.MONGO_INITDB_ROOT_PASSWORD}@${process.env.MONGO_HOST}:${process.env.MONGO_PORT}/${process.env.MONGO_DB_NAME}?authSource=admin`,
     connectionOptions: {
       useNewUrlParser: true,
       useUnifiedTopology: true,

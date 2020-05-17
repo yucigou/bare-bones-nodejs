@@ -1,4 +1,4 @@
-const { getPopulation, getCountryNames } = require('./population');
+const { getPopulation, getCountryNames } = require('../population');
 
 (async () => {
   const population = await getPopulation('India');

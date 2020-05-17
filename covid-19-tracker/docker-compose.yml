@@ -11,6 +11,12 @@ services:
     volumes:
       - ~/local-volume/mongo-data:/data/db
 
+  mailer:
+    image: namshi/smtp
+    restart: always
+    ports:
+      - '25:25'
+
   app:
     image: covid_19_tracker:1.0.0
     build:
@@ -18,6 +24,7 @@ services:
       dockerfile: ./Dockerfile
     depends_on:
       - mongo
+      - mailer
     env_file:
       - .env
     volumes:

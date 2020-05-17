@@ -15,6 +15,7 @@ const {
   curateCountryName,
   processNewCountryName,
 } = require('../utils/country');
+const sendMail = require('../utils/email');
 
 mongoose.connect(mongodb.uris, mongodb.connectionOptions);
 

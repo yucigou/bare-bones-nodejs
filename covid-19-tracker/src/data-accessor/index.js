@@ -2,7 +2,7 @@
 require('dotenv').config();
 const { mongodb, queue } = require('config');
 const logger = require('../utils/logger');
-const { isReportDateValid } = require('../utils/validator');
+const { isReportDateValid } = require('../utils/date');
 const mongoose = require('mongoose');
 const { MongooseQueue } = require('mongoose-queue');
 const Payload = require('./models/payload');
@@ -132,9 +132,18 @@ const isUpdated = (reportDate) => {
  */
 const updateAllCountries = async (dailyStats) => {};
 
+const getCountryDailyStats = async (countryName) => {
+  const country = await Country.findOne(
+    { name: countryName },
+    '-_id name dailyStats.confirmed dailyStats.recovered dailyStats.deaths dailyStats.active dailyStats.reportDate'
+  );
+  return country;
+};
+
 module.exports = {
   publish,
   consume,
   isUpdated,
   updateAllCountries,
+  getCountryDailyStats,
 };

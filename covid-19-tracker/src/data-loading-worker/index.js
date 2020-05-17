@@ -2,7 +2,7 @@
 require('dotenv').config();
 const { mongodb, queue } = require('config');
 const logger = require('../utils/logger');
-const { isReportDateValid } = require('../utils/validator');
+const { isReportDateValid } = require('../utils/date');
 const mapSeries = require('../utils/map-series');
 const { consume, isUpdated, updateAllCountries } = require('../data-accessor');
 const { getWorldDaily, getDailyStats } = require('../api/covid19');
