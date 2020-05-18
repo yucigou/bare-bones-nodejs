@@ -1,5 +1,7 @@
 FROM node:10.15.3
 
+RUN apt-get update && apt-get install -y vim less
+
 # Install pm2
 RUN [ "npm", "install", "-g", "pm2" ]
 

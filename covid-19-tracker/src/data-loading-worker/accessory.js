@@ -97,7 +97,7 @@ const combineCountryRegions = (dailyStats) => {
       recovered,
     }) => {
       ({ provinceState, countryRegion } = handleSpecialRegions(
-        provinceState.trim(),
+        provinceState ? provinceState.trim() : '',
         countryRegion.trim() // ' Azerbaijan'
       ));
 

@@ -23,7 +23,7 @@ const getDailyStats = (date) => {
       return response.data;
     })
     .catch(function (error) {
-      logger.error(`Error getting Covid-19 daily stats for ${date}`, error);
+      logger.error(`Error getting Covid-19 daily stats for ${date}: `, error);
     })
     .finally(function () {
       logger.info(`Got Covid-19 daily stats for ${date}`);

@@ -255,6 +255,11 @@ const getLatestReportDate = async () => {
 };
 
 const isQueued = async (reportDate) => {
+  if (!conn.db) {
+    logger.warn(`Connection to MongoDB is not ready yet.`);
+    return false;
+  }
+
   try {
     const result = await conn.db
       .collection('queues')
