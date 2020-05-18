@@ -16,7 +16,7 @@ const extraCountries = [
   { name: 'Ivory Coast' },
   { name: 'Jersey' },
   { name: 'Hong Kong', aliases: ['Hong Kong SAR'] },
-  { name: 'Macau', aliases: ['Macao SAR'] },
+  { name: 'Macau', aliases: ['Macau SAR', 'Macao', 'Macao SAR'] },
   { name: 'Martinique' },
   { name: 'Mayotte' },
   { name: 'Others', aliases: ['Cruise Ship'] },
@@ -153,7 +153,9 @@ const handleSpecialRegions = (provinceState, countryRegion) => {
   if (
     provinceState &&
     (provinceState.toUpperCase() === 'Macau'.toUpperCase() ||
-      provinceState.toUpperCase() === 'Macau SAR'.toUpperCase())
+      provinceState.toUpperCase() === 'Macau SAR'.toUpperCase() ||
+      provinceState.toUpperCase() === 'Macao'.toUpperCase() ||
+      provinceState.toUpperCase() === 'Macao SAR'.toUpperCase())
   ) {
     return { provinceState, countryRegion: 'Macau' };
   }
