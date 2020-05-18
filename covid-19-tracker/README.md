@@ -1,3 +1,5 @@
+This API provides the Covid-19 daily stats for a given region or country, and this API complements the API provided by https://github.com/mathdroid/covid-19-api
+
 # .env
 
 ```
@@ -36,7 +38,7 @@ This API can or should work with the API of the original data source provider.
 - https://covid19.mathdro.id/api
 - https://covid19.mathdro.id/api/daily
 
-# Original Data Source
+# Original Data Source with special thanks
 
 - https://covid19.mathdro.id/api/countries
 - https://covid19.mathdro.id/api/daily
