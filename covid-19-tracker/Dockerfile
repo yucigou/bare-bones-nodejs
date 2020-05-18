@@ -18,6 +18,7 @@ RUN npm install
 # Bundle app source
 COPY config config
 COPY src src
+COPY wrapperScript.sh wrapperScript.sh
 
 EXPOSE 3000
 
