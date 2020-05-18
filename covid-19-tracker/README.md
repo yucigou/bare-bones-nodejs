@@ -15,7 +15,29 @@ MAILER_TO=xxx@example.com
 WS_PORT=3000
 ```
 
-# How to use
+# API
 
-- Step 1: Seed the database if not yet
-- Step 2: Start pm2
+## Get all available region names
+
+```
+http://localhost:3000/api/regions
+```
+
+## Get daily stats of a given region
+
+```
+http://localhost:3000/api/daily/Switzerland
+```
+
+## Notes
+
+This API can or should work with the API of the original data source provider.
+
+- https://covid19.mathdro.id/api
+- https://covid19.mathdro.id/api/daily
+
+# Original Data Source
+
+- https://covid19.mathdro.id/api/countries
+- https://covid19.mathdro.id/api/daily
+- https://covid19.mathdro.id/api/daily/2020-05-17
