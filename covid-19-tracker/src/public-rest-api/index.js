@@ -1,5 +1,6 @@
 require('dotenv').config();
 const express = require('express');
+const cors = require('cors');
 const logger = require('../utils/logger');
 const { isDateAcceptable } = require('../utils/date');
 const { transformCountryList, sortDailyStats } = require('./transformer');
@@ -8,8 +9,9 @@ const {
   getCountryDailyStats,
   getAllCountryNames,
 } = require('../data-accessor');
+
 const app = express();
-const port = process.env.WS_PORT || 3000;
+app.use(cors());
 
 const shallPublish = (countryStats, mostRecentDate) => {
   if (!countryStats) {
@@ -54,6 +56,8 @@ app.get('/api/regions', async (req, res) => {
   const countryNameList = transformCountryList(regions);
   res.json(countryNameList);
 });
+
+const port = process.env.WS_PORT || 3000;
 
 app.listen(port, () =>
   logger.info(`Covid-19 Tracker API listening at http://localhost:${port}`)

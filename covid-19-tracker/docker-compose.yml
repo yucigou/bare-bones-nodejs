@@ -30,7 +30,7 @@ services:
       dockerfile: ./Dockerfile
     command: sh -c "./wrapperScript.sh"
     ports:
-      - '3000:3000'
+      - '3030:3000'
     depends_on:
       - mongo
       - mailer
