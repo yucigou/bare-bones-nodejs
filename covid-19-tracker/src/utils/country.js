@@ -15,6 +15,8 @@ const extraCountries = [
   { name: 'Guernsey' },
   { name: 'Ivory Coast' },
   { name: 'Jersey' },
+  { name: 'Hong Kong', aliases: ['Hong Kong SAR'] },
+  { name: 'Macau', aliases: ['Macao SAR'] },
   { name: 'Martinique' },
   { name: 'Mayotte' },
   { name: 'Others', aliases: ['Cruise Ship'] },
@@ -45,13 +47,7 @@ const curateCountryName = ({ name, iso2, iso3, aliases }) => {
       name,
       iso2,
       iso3,
-      aliases: [
-        'Mainland China',
-        'Hong Kong',
-        'Hong Kong SAR',
-        'Macau',
-        'Macao SAR',
-      ],
+      aliases: ['Mainland China'],
     };
   }
   if (name === 'Congo (Brazzaville)') {
@@ -146,8 +142,27 @@ const curateCountryName = ({ name, iso2, iso3, aliases }) => {
   return { name: processNewCountryName(name), iso2, iso3, aliases };
 };
 
+const handleSpecialRegions = (provinceState, countryRegion) => {
+  if (
+    provinceState &&
+    (provinceState.toUpperCase() === 'Hong Kong'.toUpperCase() ||
+      provinceState.toUpperCase() === 'Hong Kong SAR'.toUpperCase())
+  ) {
+    return { provinceState, countryRegion: 'Hong Kong' };
+  }
+  if (
+    provinceState &&
+    (provinceState.toUpperCase() === 'Macau'.toUpperCase() ||
+      provinceState.toUpperCase() === 'Macau SAR'.toUpperCase())
+  ) {
+    return { provinceState, countryRegion: 'Macau' };
+  }
+  return { provinceState, countryRegion };
+};
+
 module.exports = {
   extraCountries,
   curateCountryName,
   processNewCountryName,
+  handleSpecialRegions,
 };

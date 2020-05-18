@@ -47,12 +47,15 @@ const handleJob = async (reportDate) => {
 
 const loadData = async () => {
   logger.info('About to check payload and load data');
+  let moreJob = true;
   try {
-    await consume(handleJob);
+    while (moreJob) {
+      moreJob = await consume(handleJob);
+    }
   } catch (error) {
     logger.error(`Error consuming the job queue: ${error}`);
   } finally {
-    logger.info('Done with the job');
+    logger.info('Done with the job batch');
     setTimeout(loadData, 60000);
   }
 };

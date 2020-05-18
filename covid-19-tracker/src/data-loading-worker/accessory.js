@@ -9,7 +9,11 @@ const {
   updateMetadata,
 } = require('../data-accessor/index');
 const sendMail = require('../utils/email');
-const { extraCountries, processNewCountryName } = require('../utils/country');
+const {
+  extraCountries,
+  processNewCountryName,
+  handleSpecialRegions,
+} = require('../utils/country');
 const { isDateAcceptable, getNextDate } = require('../utils/date');
 
 const addDailyStats = async (reportDate) => {
@@ -26,10 +30,14 @@ const addDailyStats = async (reportDate) => {
     nextDateToReport = covid19.earliestReportDate;
   }
 
-  while (
-    isDateAcceptable(nextDateToReport) &&
-    new Date(nextDateToReport) <= new Date(reportDate)
-  ) {
+  if (new Date(nextDateToReport) > new Date(reportDate)) {
+    logger.info(
+      `Job redundant: next date ${nextDateToReport} > asked date ${reportDate}`
+    );
+    return;
+  }
+
+  while (new Date(nextDateToReport) <= new Date(reportDate)) {
     await addSingleDailyStats(nextDateToReport);
     nextDateToReport = getNextDate(nextDateToReport);
   }
@@ -39,6 +47,10 @@ const addSingleDailyStats = async (reportDate) => {
   logger.info(`Start to add stats for ${reportDate}`);
   const allCountries = await getAllCountriesFromDB();
   const dailyStats = await getDailyStats(reportDate);
+  if (!dailyStats || dailyStats.length <= 0) {
+    logger.warn(`No daily stats available from mathdro for ${reportDate}`);
+    return;
+  }
   const staged = combineCountryRegions(dailyStats);
   const updatedCountries = comebineCountryAliases(
     allCountries,
@@ -76,8 +88,19 @@ const getAllCountriesFromDB = async () => {
 const combineCountryRegions = (dailyStats) => {
   const staged = {};
   dailyStats.forEach(
-    ({ countryRegion, lastUpdate, confirmed, deaths, recovered }) => {
-      countryRegion = countryRegion.trim(); // ' Azerbaijan'
+    ({
+      provinceState,
+      countryRegion,
+      lastUpdate,
+      confirmed,
+      deaths,
+      recovered,
+    }) => {
+      ({ provinceState, countryRegion } = handleSpecialRegions(
+        provinceState.trim(),
+        countryRegion.trim() // ' Azerbaijan'
+      ));
+
       confirmed = confirmed ? parseInt(confirmed) : 0;
       deaths = deaths ? parseInt(deaths) : 0;
       recovered = recovered ? parseInt(recovered) : 0;

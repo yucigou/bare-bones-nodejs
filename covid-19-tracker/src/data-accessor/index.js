@@ -1,14 +1,15 @@
 'use strict';
 require('dotenv').config();
-const { mongodb, queue } = require('config');
+const { mongodb, queue, covid19 } = require('config');
 const logger = require('../utils/logger');
 const mapSeries = require('../utils/map-series');
-const { isReportDateValid } = require('../utils/date');
+const { getNextDate, isReportDateValid } = require('../utils/date');
 const { curateCountryName } = require('../utils/country');
 const mongoose = require('mongoose');
 const { MongooseQueue } = require('mongoose-queue');
 const Payload = require('./models/payload');
 const Country = require('./models/country');
+const World = require('./models/world');
 const MetaData = require('../data-accessor/models/metadata');
 
 const mongooseQueue = new MongooseQueue(
@@ -19,10 +20,10 @@ const mongooseQueue = new MongooseQueue(
 
 mongoose.connect(mongodb.uris, mongodb.connectionOptions);
 
-const db = mongoose.connection;
-db.on('error', console.error.bind(console, 'connection error:'));
-db.once('open', function () {
-  logger.info('We are connected!');
+const conn = mongoose.connection;
+conn.on('error', console.error.bind(console, 'connection error:'));
+conn.once('open', () => {
+  logger.info('Connection to MongoDB has been made.');
 });
 
 const cleanQueue = () => {
@@ -37,9 +38,15 @@ const cleanQueue = () => {
 
 // See {"reportDate": "2020-04-29"} in the response of API https://covid19.mathdro.id/api/daily
 // reportDate will be used later to call API https://covid19.mathdro.id/api/daily/2020-04-29
-const publish = (reportDate) => {
+const publish = async (reportDate) => {
   if (!isReportDateValid(reportDate)) {
     logger.error(`Invalid reportDate: ${reportDate}`);
+    return;
+  }
+
+  const alreadyInQueue = await isQueued(reportDate);
+  if (alreadyInQueue) {
+    logger.info(`${reportDate} already in the message queue. Skip it.`);
     return;
   }
 
@@ -87,7 +94,7 @@ const consume = (handleJob) => {
 
         if (!job) {
           logger.info('No jobs. Next time.');
-          resolve();
+          resolve(0);
           return;
         }
 
@@ -108,7 +115,7 @@ const consume = (handleJob) => {
 
           const { payload, id, blockedUntil, done } = job;
           logger.info(`Job acked: ${id}, ${blockedUntil}, ${done}, ${payload}`);
-          resolve();
+          resolve(1);
         });
       });
     } catch (error) {
@@ -247,10 +254,87 @@ const getLatestReportDate = async () => {
   return metadata.latestReportDate;
 };
 
+const isQueued = async (reportDate) => {
+  try {
+    const result = await conn.db
+      .collection('queues')
+      .aggregate([
+        { $unwind: '$payload' },
+        {
+          $lookup: {
+            from: 'payloads',
+            localField: 'payload',
+            foreignField: '_id',
+            as: 'payloadDetails',
+          },
+        },
+        {
+          $match: {
+            retries: { $lte: queue.options.maxRetries },
+            done: false,
+            'payloadDetails.reportDate': reportDate,
+          },
+        },
+      ])
+      .toArray();
+    return result && result.length > 0;
+  } catch (error) {
+    logger.error(`Error checking the queue: ${error}`);
+    return false;
+  }
+};
+
+const updateWorldDaily = async (worldDaily) => {
+  logger.info(`Updating world daily stats`);
+  const latestReportDate = worldDaily.reduce(
+    (a, b) => {
+      return a.reportDate > b.reportDate ? a : b;
+    },
+    { reportDate: covid19.earliestReportDate }
+  );
+  logger.info(
+    `The current latest report date is ${latestReportDate.reportDate}`
+  );
+
+  const world = await World.find();
+  let nextReportDate = covid19.earliestReportDate;
+  while (new Date(nextReportDate) <= new Date(latestReportDate.reportDate)) {
+    const stats = worldDaily.find(
+      (daily) => daily.reportDate === nextReportDate
+    );
+    if (!stats) {
+      logger.warn(
+        `Odd, world daily stats does not have stats for ${nextReportDate}`
+      );
+      nextReportDate = getNextDate(nextReportDate);
+      continue;
+    }
+    if (
+      !world ||
+      world.length <= 0 ||
+      !world.find((d) => d.reportDate === nextReportDate)
+    ) {
+      const newWorldDaily = new World({
+        confirmed: stats.totalConfirmed,
+        recovered: stats.totalRecovered,
+        deaths: stats.deaths.total,
+        active:
+          stats.totalConfirmed - stats.totalRecovered - stats.deaths.total,
+        reportDate: nextReportDate,
+      });
+
+      await newWorldDaily.save();
+      logger.info(`World daily stats saved for ${nextReportDate}`);
+    }
+    nextReportDate = getNextDate(nextReportDate);
+  }
+  logger.info(`Updating world daily stats - done`);
+};
+
 module.exports = {
   cleanQueue,
   consume,
-  db,
+  conn,
   getCountryDailyStats,
   getAllCountryNames,
   getAllCountries,
@@ -260,4 +344,5 @@ module.exports = {
   saveCountryNames,
   updateCountriesToDB,
   updateMetadata,
+  updateWorldDaily,
 };

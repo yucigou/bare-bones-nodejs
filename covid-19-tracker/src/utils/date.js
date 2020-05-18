@@ -40,18 +40,22 @@ const getNextDate = (reportDate) => {
   return formatDate(date);
 };
 
-const getLatestReportDateFromAPI = async () => {
+const getWorldDailyReportFromAPI = async () => {
   const worldDaily = await getWorldDaily();
-  return worldDaily.reduce(
+  const latestRecord = worldDaily.reduce(
     (a, b) => {
       return a.reportDate > b.reportDate ? a : b;
     },
     { reportDate: covid19.earliestReportDate }
   );
+  return {
+    worldDaily,
+    latestReportDate: latestRecord.reportDate,
+  };
 };
 
 module.exports = {
-  getLatestReportDateFromAPI,
+  getWorldDailyReportFromAPI,
   getNextDate,
   isDateAcceptable,
   isReportDateValid,
