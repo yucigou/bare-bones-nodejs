@@ -31,6 +31,12 @@ http://localhost:3000/api/regions
 http://localhost:3000/api/daily/Switzerland
 ```
 
+## Get the latest daily stats of all regions
+
+```
+http://localhost:3000/api/daily
+```
+
 ## Notes
 
 This API can or should work with the API of the original data source provider.

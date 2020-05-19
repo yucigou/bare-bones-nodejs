@@ -158,6 +158,28 @@ const getCountryDailyStats = async (countryName) => {
   return country;
 };
 
+const getLatestDailyStats = async () => {
+  const countries = await Country.aggregate([
+    {
+      $project: {
+        name: 1,
+        latestReportDate: {
+          $arrayElemAt: [
+            '$dailyStats',
+            {
+              $indexOfArray: [
+                '$dailyStats.reportDate',
+                { $max: '$dailyStats.reportDate' },
+              ],
+            },
+          ],
+        },
+      },
+    },
+  ]);
+  return countries;
+};
+
 const getAllCountryNames = async () => {
   const country = await Country.find({}, '-_id name', {
     sort: { name: 1 },
@@ -343,6 +365,7 @@ module.exports = {
   getCountryDailyStats,
   getAllCountryNames,
   getAllCountries,
+  getLatestDailyStats,
   getLatestReportDate,
   isUpdated,
   publish,

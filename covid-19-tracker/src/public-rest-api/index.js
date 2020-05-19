@@ -3,11 +3,16 @@ const express = require('express');
 const cors = require('cors');
 const logger = require('../utils/logger');
 const { isDateAcceptable } = require('../utils/date');
-const { transformCountryList, sortDailyStats } = require('./transformer');
 const {
-  publish,
-  getCountryDailyStats,
+  sortDailyStats,
+  transformCountryList,
+  transformLatestDailyStats,
+} = require('./transformer');
+const {
   getAllCountryNames,
+  getCountryDailyStats,
+  getLatestDailyStats,
+  publish,
 } = require('../data-accessor');
 
 const app = express();
@@ -46,6 +51,15 @@ app.get('/api/daily/:region/:mostRecentDate?', async (req, res) => {
   }
   if (countryStats) {
     res.json(sortDailyStats(countryStats));
+  } else {
+    res.json({});
+  }
+});
+
+app.get('/api/daily', async (req, res) => {
+  const countryStats = await getLatestDailyStats();
+  if (countryStats) {
+    res.json(transformLatestDailyStats(countryStats));
   } else {
     res.json({});
   }
