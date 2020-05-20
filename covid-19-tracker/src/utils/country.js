@@ -1,170 +1,119 @@
-const extraCountries = [
-  { name: 'Aruba' },
-  { name: 'Cape Verde' },
-  { name: 'Cayman Islands' },
-  { name: 'Channel Islands' },
-  { name: 'Curacao' },
-  { name: 'Czech Republic' },
-  { name: 'East Timor' },
-  { name: 'Faroe Islands' },
-  { name: 'French Guiana' },
-  { name: 'Gibraltar' },
-  { name: 'Greenland' },
-  { name: 'Guadeloupe' },
-  { name: 'Guam' },
-  { name: 'Guernsey' },
-  { name: 'Ivory Coast' },
-  { name: 'Jersey' },
-  { name: 'Hong Kong', aliases: ['Hong Kong SAR'] },
-  { name: 'Macau', aliases: ['Macau SAR', 'Macao', 'Macao SAR'] },
-  { name: 'Martinique' },
-  { name: 'Mayotte' },
-  { name: 'Others', aliases: ['Cruise Ship'] },
-  {
-    name: 'Palestine',
-    aliases: ['occupied Palestinian territory', 'Palestinian'],
-  },
-  { name: 'Puerto Rico' },
-  { name: 'Reunion' },
-  { name: 'Saint Barthelemy' },
-  { name: 'Saint Martin', aliases: ['St. Martin'] },
-  { name: 'Vatican City' },
-];
-
+const allCountries = require('../resource/countries');
 const processNewCountryName = (name) => name.trim();
 
-const curateCountryName = ({ name, iso2, iso3, aliases }) => {
+const curateCountryName = (countryName) => {
+  const { name } = countryName;
   if (name === 'Bahamas') {
-    return {
-      name,
-      iso2,
-      iso3,
-      aliases: ['The Bahamas', 'Bahamas, The'],
-    };
+    countryName.aliases.push('The Bahamas');
+    countryName.aliases.push('Bahamas, The');
+    return countryName;
   }
   if (name === 'China') {
-    return {
-      name,
-      iso2,
-      iso3,
-      aliases: ['Mainland China'],
-    };
+    countryName.aliases.push('Mainland China');
+    countryName.aliases.push('Hong Kong');
+    countryName.aliases.push('Hong Kong SAR');
+    countryName.aliases.push('Macao');
+    countryName.aliases.push('Macao SAR');
+    countryName.aliases.push('Macau');
+    countryName.aliases.push('Macau SAR');
+    return countryName;
   }
   if (name === 'Congo (Brazzaville)') {
-    return {
-      name,
-      iso2,
-      iso3,
-      aliases: ['Republic of the Congo'],
-    };
+    countryName.aliases.push('Republic of the Congo');
+    return countryName;
   }
   if (name === 'Gambia') {
-    return {
-      name,
-      iso2,
-      iso3,
-      aliases: ['The Gambia', 'Gambia, The'],
-    };
+    countryName.aliases.push('The Gambia');
+    countryName.aliases.push('Gambia, The');
+    return countryName;
   }
-  if (name === 'Iran') {
-    return {
-      name,
-      iso2,
-      iso3,
-      aliases: ['Iran (Islamic Republic of)'],
-    };
+  if (name === 'Iran, Islamic Republic of') {
+    countryName.aliases.push('Iran (Islamic Republic of)');
+    return countryName;
   }
   if (name === 'Ireland') {
-    return {
-      name,
-      iso2,
-      iso3,
-      aliases: ['Republic of Ireland'],
-    };
+    countryName.aliases.push('Republic of Ireland');
+    return countryName;
   }
-  if (name === 'Korea, South') {
-    return {
-      name: 'South Korea',
-      iso2,
-      iso3,
-      aliases: [name, 'Republic of Korea'],
-    };
+  if (name === 'Holy See (Vatican City State)') {
+    countryName.aliases.push('Vatican City');
+    countryName.aliases.push('Holy See');
+    return countryName;
+  }
+  if (name === 'Korea, Republic of') {
+    countryName.aliases.push('South Korea');
+    countryName.aliases.push('Republic of Korea');
+    return countryName;
   }
   if (name === 'Moldova') {
-    return {
-      name,
-      iso2,
-      iso3,
-      aliases: ['Republic of Moldova'],
-    };
+    countryName.aliases.push('Republic of Moldova');
+    return countryName;
   }
-  if (name === 'Russia') {
-    return {
-      name,
-      iso2,
-      iso3,
-      aliases: ['Russian Federation'],
-    };
+  if (name === 'Palestine') {
+    countryName.aliases.push('Palestinian');
+    countryName.aliases.push('occupied Palestinian territory');
+    return countryName;
+  }
+  if (name === 'Saint Martin (French part)') {
+    countryName.aliases.push('Saint Martin');
+    countryName.aliases.push('St. Martin');
+    return countryName;
   }
   if (name.match(/Taiwan/)) {
-    return {
-      name: 'Taiwan',
-      iso2,
-      iso3,
-      aliases: ['Taiwan*', 'Taipei and environs'],
-    };
+    countryName.name = 'Taiwan, Republic of China';
+    countryName.aliases.push('Taiwan');
+    countryName.aliases.push('Taiwan*');
+    countryName.aliases.push('Taipei and environs');
+    countryName.aliases.push('Taiwan, Province of China');
+    return countryName;
+  }
+  if (name === 'Timor-Leste') {
+    countryName.aliases.push('East Timor');
+    return countryName;
   }
   if (name === 'United Kingdom') {
-    return {
-      name,
-      iso2,
-      iso3,
-      aliases: ['UK', 'North Ireland'],
-    };
+    countryName.aliases.push('UK');
+    countryName.aliases.push('North Ireland');
+    return countryName;
   }
-  if (name === 'US') {
-    return {
-      name: 'United States',
-      iso2,
-      iso3,
-      aliases: ['US', 'USA'],
-    };
+  if (name === 'United States') {
+    countryName.aliases.push('USA');
+    return countryName;
   }
   if (name === 'Vietnam') {
-    return {
-      name,
-      iso2,
-      iso3,
-      aliases: ['Viet Nam'],
-    };
+    countryName.aliases.push('Viet Nam');
+    return countryName;
   }
 
-  return { name: processNewCountryName(name), iso2, iso3, aliases };
+  return countryName;
 };
 
-const handleSpecialRegions = (provinceState, countryRegion) => {
-  if (
-    provinceState &&
-    (provinceState.toUpperCase() === 'Hong Kong'.toUpperCase() ||
-      provinceState.toUpperCase() === 'Hong Kong SAR'.toUpperCase())
-  ) {
-    return { provinceState, countryRegion: 'Hong Kong' };
+const handleSpecialRegions = (country) => {
+  let region;
+  if (country.name.match(/Macau/i)) {
+    region = allCountries.find((c) => c.name === 'Macao');
+  } else if (country.name.match(/Hong Kong/i)) {
+    region = allCountries.find((c) => c.name === 'Hong Kong');
+  } else if (country.name.match(/Taiwan/i)) {
+    region = allCountries.find((c) => c.name === 'Taiwan');
   }
-  if (
-    provinceState &&
-    (provinceState.toUpperCase() === 'Macau'.toUpperCase() ||
-      provinceState.toUpperCase() === 'Macau SAR'.toUpperCase() ||
-      provinceState.toUpperCase() === 'Macao'.toUpperCase() ||
-      provinceState.toUpperCase() === 'Macao SAR'.toUpperCase())
-  ) {
-    return { provinceState, countryRegion: 'Macau' };
+
+  if (region) {
+    country.icon = region.icon;
+    country.iso2 = region.iso2;
+    country.code = region.code;
+    return country;
   }
-  return { provinceState, countryRegion };
+
+  return country;
+};
+
+const curateCountryNames = (countryNames) => {
+  return countryNames.map((countryName) => curateCountryName(countryName));
 };
 
 module.exports = {
-  extraCountries,
-  curateCountryName,
+  curateCountryNames,
   processNewCountryName,
   handleSpecialRegions,
 };

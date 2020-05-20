@@ -1,9 +1,9 @@
 const logger = require('../utils/logger');
-const transformCountryList = (countryList) => {
-  return countryList.map((country) => country.name);
-};
 
 const sortDailyStats = ({ name, dailyStats }) => {
+  if (!dailyStats) {
+    return { name, dailyStats };
+  }
   return {
     name,
     dailyStats: dailyStats.sort((a, b) =>
@@ -32,6 +32,5 @@ const transformLatestDailyStats = (statsList) => {
 
 module.exports = {
   sortDailyStats,
-  transformCountryList,
   transformLatestDailyStats,
 };

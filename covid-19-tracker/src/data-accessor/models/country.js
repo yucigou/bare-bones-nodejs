@@ -37,7 +37,11 @@ const CountrySchema = new Schema({
     type: String,
     required: false,
   },
-  iso3: {
+  icon: {
+    type: String,
+    required: false,
+  },
+  code: {
     type: String,
     required: false,
   },

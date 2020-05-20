@@ -3,11 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const logger = require('../utils/logger');
 const { isDateAcceptable } = require('../utils/date');
-const {
-  sortDailyStats,
-  transformCountryList,
-  transformLatestDailyStats,
-} = require('./transformer');
+const { sortDailyStats, transformLatestDailyStats } = require('./transformer');
 const {
   getAllCountryNames,
   getCountryDailyStats,
@@ -47,7 +43,11 @@ app.get('/api/daily/:region/:mostRecentDate?', async (req, res) => {
     publish(mostRecentDate);
     logger.info(`Published request for ${req.params.mostRecentDate}`);
   } else {
-    logger.info(`No need to publish request for ${req.params.mostRecentDate}`);
+    if (req.params.mostRecentDate) {
+      logger.info(
+        `No need to publish request for ${req.params.mostRecentDate}`
+      );
+    }
   }
   if (countryStats) {
     res.json(sortDailyStats(countryStats));
@@ -67,8 +67,7 @@ app.get('/api/daily', async (req, res) => {
 
 app.get('/api/regions', async (req, res) => {
   const regions = await getAllCountryNames();
-  const countryNameList = transformCountryList(regions);
-  res.json(countryNameList);
+  res.json(regions);
 });
 
 const port = process.env.WS_PORT || 3000;

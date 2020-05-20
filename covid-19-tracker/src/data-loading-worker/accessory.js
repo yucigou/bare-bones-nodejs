@@ -4,13 +4,11 @@ const { getCountryNames, getDailyStats } = require('../api/covid19');
 const {
   getAllCountries,
   getLatestReportDate,
-  saveCountryNames,
   updateCountriesToDB,
   updateMetadata,
-} = require('../data-accessor/index');
+} = require('../data-accessor');
 const sendMail = require('../utils/email');
 const {
-  extraCountries,
   processNewCountryName,
   handleSpecialRegions,
 } = require('../utils/country');
@@ -51,7 +49,7 @@ const addSingleDailyStats = async (reportDate) => {
     logger.warn(`No daily stats available from mathdro for ${reportDate}`);
     return;
   }
-  const staged = combineCountryRegions(dailyStats);
+  const staged = combineCountryRegions(allCountries, dailyStats);
   const updatedCountries = comebineCountryAliases(
     allCountries,
     staged,
@@ -64,18 +62,6 @@ const addSingleDailyStats = async (reportDate) => {
 
 const getAllCountriesFromDB = async () => {
   let allCountries = await getAllCountries();
-  if (allCountries && allCountries.length > 100) {
-    logger.info(`Got all countries from the DB`);
-    return allCountries;
-  }
-
-  // Not found, so seed it.
-  const names = await getCountryNames();
-  let countryNames = names.countries;
-  countryNames = countryNames.concat(extraCountries);
-  await saveCountryNames(countryNames);
-
-  allCountries = await getAllCountries();
   if (allCountries && allCountries.length <= 100) {
     logger.error(`Error getting all countries`);
     return null;
@@ -84,32 +70,34 @@ const getAllCountriesFromDB = async () => {
   return allCountries;
 };
 
-/* Pipeline Stage 1: Combine all regions of a country */
-const combineCountryRegions = (dailyStats) => {
+/* Pipeline Stage 1: Combine all regions of a country and also keep all regions*/
+const combineCountryRegions = (allCountries, dailyStats) => {
   const staged = {};
-  dailyStats.forEach(
-    ({
+  dailyStats.forEach((daily) => {
+    let {
       provinceState,
       countryRegion,
       lastUpdate,
       confirmed,
       deaths,
       recovered,
-    }) => {
-      ({ provinceState, countryRegion } = handleSpecialRegions(
-        provinceState ? provinceState.trim() : '',
-        countryRegion.trim() // ' Azerbaijan'
-      ));
+    } = daily;
+    provinceState =
+      daily[Object.keys(daily).find((p) => p.match(/provinceState/))];
+    provinceState = provinceState ? provinceState.trim() : '';
+    countryRegion = countryRegion ? countryRegion.trim() : '';
 
-      confirmed = confirmed ? parseInt(confirmed) : 0;
-      deaths = deaths ? parseInt(deaths) : 0;
-      recovered = recovered ? parseInt(recovered) : 0;
-      if (countryRegion in staged) {
-        staged[countryRegion].confirmed += confirmed;
-        staged[countryRegion].deaths += deaths;
-        staged[countryRegion].recovered += recovered;
-        staged[countryRegion].active += confirmed - recovered - deaths;
-      } else {
+    confirmed = confirmed ? parseInt(confirmed) : 0;
+    deaths = deaths ? parseInt(deaths) : 0;
+    recovered = recovered ? parseInt(recovered) : 0;
+
+    if (countryRegion in staged) {
+      staged[countryRegion].confirmed += confirmed;
+      staged[countryRegion].deaths += deaths;
+      staged[countryRegion].recovered += recovered;
+      staged[countryRegion].active += confirmed - recovered - deaths;
+    } else {
+      if (countryRegion) {
         staged[countryRegion] = {
           lastUpdate,
           confirmed,
@@ -117,9 +105,35 @@ const combineCountryRegions = (dailyStats) => {
           recovered,
           active: confirmed - recovered - deaths,
         };
+      } else {
+        logger.warn(
+          `countryRegion not defined for provinceState ${provinceState}`
+        );
       }
     }
-  );
+
+    if (
+      provinceState &&
+      countryRegion &&
+      !countryRegion.match(/Taiwan/i) &&
+      !countryRegion.match(/Taipei/i)
+    ) {
+      let combinedKey;
+      let country = findCountry(allCountries, countryRegion);
+      if (country) {
+        combinedKey = `${provinceState}, ${country.name}`;
+      } else {
+        combinedKey = `${provinceState}, ${countryRegion}`;
+      }
+      staged[combinedKey] = {
+        lastUpdate,
+        confirmed,
+        deaths,
+        recovered,
+        active: confirmed - recovered - deaths,
+      };
+    }
+  });
   return staged;
 };
 
@@ -132,16 +146,16 @@ const comebineCountryAliases = (allCountries, staged, reportDate) => {
     stats.reportDate = reportDate;
     let country = findCountry(allCountries, countryRegion);
     if (!country) {
-      const warning = `${countryRegion} not found in the DB`;
-      logger.warn(warning);
-      sendMail({
-        subject: process.env.PROCESSOR || 'Default - Seeding',
-        text: warning,
-      });
+      logger.info(`${countryRegion} not found in the DB. Add it new.`);
+      // sendMail({
+      //   subject: process.env.PROCESSOR || 'Default - Seeding',
+      //   text: warning,
+      // });
       country = {
-        name: processNewCountryName(countryRegion),
+        name: countryRegion,
         newlyAdded: true,
       };
+      country = handleSpecialRegions(country);
     }
 
     if (country.name in countryUpdated) {
@@ -154,6 +168,9 @@ const comebineCountryAliases = (allCountries, staged, reportDate) => {
         newlyAdded: country.newlyAdded,
         stats,
         lastUpdate: stats.lastUpdate,
+        iso2: country.iso2,
+        icon: country.icon,
+        code: country.code,
       };
     }
   });

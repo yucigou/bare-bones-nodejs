@@ -181,10 +181,37 @@ const getLatestDailyStats = async () => {
 };
 
 const getAllCountryNames = async () => {
-  const country = await Country.find({}, '-_id name', {
-    sort: { name: 1 },
-  });
-  return country;
+  const countries = await Country.aggregate([
+    {
+      $match: {
+        dailyStats: { $exists: true },
+      },
+    },
+    {
+      $project: {
+        _id: 0,
+        name: 1,
+        iso2: {
+          $cond: {
+            if: { $eq: [null, '$iso2'] },
+            then: '$$REMOVE',
+            else: '$iso2',
+          },
+        },
+        icon: {
+          $cond: {
+            if: { $eq: [null, '$icon'] },
+            then: '$$REMOVE',
+            else: '$icon',
+          },
+        },
+      },
+    },
+    {
+      $sort: { name: 1 },
+    },
+  ]);
+  return countries;
 };
 
 const getAllCountries = async () => {
@@ -194,14 +221,9 @@ const getAllCountries = async () => {
 
 const saveCountryNames = async (countryNames) => {
   await mapSeries(countryNames, async (countryName) => {
-    const curatedCountryName = curateCountryName(countryName);
-    await Country.findOneAndUpdate(
-      { name: curatedCountryName.name },
-      curatedCountryName,
-      {
-        upsert: true,
-      }
-    );
+    await Country.findOneAndUpdate({ name: countryName.name }, countryName, {
+      upsert: true,
+    });
   });
 };
 
@@ -234,6 +256,9 @@ const updateCountriesToDB = async (
           {
             $set: {
               newlyAdded: true,
+              iso2: updatedCountries[countryName].iso2,
+              icon: updatedCountries[countryName].icon,
+              code: updatedCountries[countryName].code,
               lastUpdate: updatedCountries[countryName].lastUpdate,
             },
             $push: {
