@@ -13,7 +13,7 @@ const sortDailyStats = ({ name, dailyStats }) => {
 };
 
 const transformLatestDailyStats = (statsList) => {
-  return statsList.map(({ name, latestReportDate }) => {
+  return statsList.map(({ name, iso2, latestReportDate }) => {
     if (latestReportDate) {
       const {
         confirmed,
@@ -22,7 +22,7 @@ const transformLatestDailyStats = (statsList) => {
         active,
         reportDate,
       } = latestReportDate;
-      return { name, confirmed, deaths, recovered, active, reportDate };
+      return { name, iso2, confirmed, deaths, recovered, active, reportDate };
     } else {
       logger.error(`No updated stats for ${name}`);
       return { name };

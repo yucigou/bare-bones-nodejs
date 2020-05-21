@@ -161,8 +161,20 @@ const getCountryDailyStats = async (countryName) => {
 const getLatestDailyStats = async () => {
   const countries = await Country.aggregate([
     {
+      $match: {
+        dailyStats: { $exists: true },
+      },
+    },
+    {
       $project: {
         name: 1,
+        iso2: {
+          $cond: {
+            if: { $eq: [null, '$iso2'] },
+            then: '$$REMOVE',
+            else: '$iso2',
+          },
+        },
         latestReportDate: {
           $arrayElemAt: [
             '$dailyStats',
