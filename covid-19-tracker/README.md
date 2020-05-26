@@ -17,6 +17,12 @@ MAILER_TO=xxx@example.com
 WS_PORT=3000
 ```
 
+# How to run
+
+```
+$ docker-compose -f docker-compose.prod.yml up -d --build
+```
+
 # API
 
 ## Get all available region names
