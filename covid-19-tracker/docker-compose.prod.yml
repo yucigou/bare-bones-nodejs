@@ -49,8 +49,9 @@ services:
 
   nginx-prometheus-exporter:
     image: nginx/nginx-prometheus-exporter:0.7.0
-    environment:
-      SCRAPE_URI: http://nginx-proxy/stub_status
+    command: -nginx.scrape-uri http://nginx-proxy/stub_status
+    # environment:
+    #   SCRAPE_URI: http://nginx-proxy/stub_status
     expose:
       - '9113'
     depends_on:
