@@ -25,8 +25,6 @@ services:
       context: .
       dockerfile: ./Dockerfile
     command: sh -c "./wrapperScript.sh"
-    ports:
-      - '3000'
     depends_on:
       - mongo
       - mailer
@@ -46,21 +44,23 @@ services:
       - ./config/nginx/default_location:/etc/nginx/vhost.d/default_location
     environment:
       DEFAULT_HOST: covid19-api.codegoodworks.co.uk
+    depends_on:
+      - app
 
   nginx-prometheus-exporter:
     image: nginx/nginx-prometheus-exporter:0.7.0
-    ports:
-      - '9113'
     environment:
       SCRAPE_URI: http://nginx-proxy/stub_status
+    depends_on:
+      - nginx-proxy
 
   prometheus:
     image: prom/prometheus
-    ports:
-      - '9090'
     volumes:
       - prometheus-data:/prometheus
       - ./config/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    depends_on:
+      - nginx-prometheus-exporter
 
   grafana:
     image: grafana/grafana
@@ -69,8 +69,8 @@ services:
     volumes:
       - ./config/grafana/grafana.ini:/etc/grafana/grafana.ini
       - grafana-storage:/var/lib/grafana
-    ports:
-      - '3000'
+    depends_on:
+      - prometheus
 
 volumes:
   prometheus-data:
