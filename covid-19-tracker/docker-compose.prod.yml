@@ -1,15 +1,6 @@
 version: '3.4'
 
 services:
-  nginx-proxy:
-    image: jwilder/nginx-proxy
-    ports:
-      - '80:80'
-    volumes:
-      - /var/run/docker.sock:/tmp/docker.sock:ro
-    environment:
-      DEFAULT_HOST: covid19-api.codegoodworks.co.uk
-
   mongo:
     image: mongo
     restart: always
@@ -45,3 +36,52 @@ services:
       VIRTUAL_HOST: covid19-api.codegoodworks.co.uk
     volumes:
       - ~/local-volume/logs:/usr/src/app/logs
+
+  nginx-proxy:
+    image: jwilder/nginx-proxy
+    ports:
+      - '80:80'
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+      - ./config/nginx/default_location:/etc/nginx/vhost.d/default_location
+    environment:
+      DEFAULT_HOST: covid19-api.codegoodworks.co.uk
+
+  nginx-prometheus-exporter:
+    image: nginx/nginx-prometheus-exporter:0.7.0
+    ports:
+      - '9113'
+    environment:
+      SCRAPE_URI: http://nginx-proxy/stub_status
+
+  prometheus:
+    image: prom/prometheus
+    ports:
+      - '9090'
+    volumes:
+      - prometheus-data:/prometheus
+      - ./config/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+
+  grafana:
+    image: grafana/grafana
+    environment:
+      VIRTUAL_HOST: monitoring.codegoodworks.co.uk
+    volumes:
+      - ./config/grafana/grafana.ini:/etc/grafana/grafana.ini
+      - grafana-storage:/var/lib/grafana
+    ports:
+      - '3000'
+
+volumes:
+  prometheus-data:
+    driver: local
+    driver_opts:
+      o: bind
+      type: none
+      device: /home/ygou/local-volume/prometheus-data
+  grafana-storage:
+    driver: local
+    driver_opts:
+      o: bind
+      type: none
+      device: /home/ygou/local-volume/grafana-storage
