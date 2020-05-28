@@ -49,13 +49,12 @@ services:
 
   nginx-prometheus-exporter:
     image: nginx/nginx-prometheus-exporter:0.7.0
-    command: -nginx.scrape-uri http://nginx-proxy/stub_status
-    # environment:
-    #   SCRAPE_URI: http://nginx-proxy/stub_status
+    environment:
+      SCRAPE_URI: http://nginx-proxy/stub_status
     expose:
       - '9113'
     depends_on:
-      - nginx-proxy
+      - grafana
 
   prometheus:
     image: prom/prometheus
@@ -63,7 +62,7 @@ services:
       - prometheus-data:/prometheus
       - ./config/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
     depends_on:
-      - nginx-prometheus-exporter
+      - app
 
   grafana:
     image: grafana/grafana
