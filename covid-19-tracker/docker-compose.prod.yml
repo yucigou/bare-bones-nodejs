@@ -78,10 +78,10 @@ volumes:
     driver_opts:
       o: bind
       type: none
-      device: /home/ygou/local-volume/prometheus-data
+      device: /home/ygou/monitoring/prometheus-data
   grafana-storage:
     driver: local
     driver_opts:
       o: bind
       type: none
-      device: /home/ygou/local-volume/grafana-storage
+      device: /home/ygou/monitoring/grafana-storage
