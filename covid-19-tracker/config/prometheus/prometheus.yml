@@ -12,4 +12,4 @@ scrape_configs:
   - job_name: node-exporter
     metrics_path: /metrics
     static_configs:
-      - targets: ['172.27.0.1:9100']
+      - targets: ['172.17.0.1:9100']
