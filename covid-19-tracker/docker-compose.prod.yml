@@ -74,6 +74,19 @@ services:
     depends_on:
       - prometheus
 
+  node-exporter:
+    image: prom/node-exporter:v1.0.0
+    user: 999:998
+    expose:
+      - '9100'
+    volumes:
+      - '/:/host:ro,rslave'
+    network_mode: 'host'
+    command:
+      - '--path.rootfs=/host'
+    depends_on:
+      - grafana
+
 volumes:
   prometheus-data:
     driver: local
