@@ -81,7 +81,7 @@ services:
       - '9100'
     volumes:
       - '/:/host:ro,rslave'
-    network_mode: 'host'
+    # network_mode: 'host'
     command:
       - '--path.rootfs=/host'
     depends_on:
