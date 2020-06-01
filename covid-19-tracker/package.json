@@ -19,6 +19,7 @@
     "mongoose-queue": "^0.3.3",
     "node-cron": "^2.0.3",
     "nodemailer": "^6.4.6",
+    "universal-analytics": "^0.4.20",
     "winston": "^3.2.1",
     "winston-daily-rotate-file": "^4.4.2"
   }

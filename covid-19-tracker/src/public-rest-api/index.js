@@ -10,6 +10,7 @@ const {
   getLatestDailyStats,
   publish,
 } = require('../data-accessor');
+const { EventCategory, sendEvent } = require('./analytics');
 
 const app = express();
 app.use(cors());
@@ -37,6 +38,11 @@ const shallPublish = (countryStats, mostRecentDate) => {
  */
 app.get('/api/daily/:region/:mostRecentDate?', async (req, res) => {
   const { region, mostRecentDate } = req.params;
+  sendEvent(
+    EventCategory.Covid19Tracker,
+    `GET Daily Stats for Region ${region}`
+  );
+
   const countryStats = await getCountryDailyStats(region);
   if (shallPublish(countryStats, mostRecentDate)) {
     // Send a message to the data loading worker to check if the daily stats of countries are up-to-date.
@@ -57,6 +63,10 @@ app.get('/api/daily/:region/:mostRecentDate?', async (req, res) => {
 });
 
 app.get('/api/daily', async (req, res) => {
+  sendEvent(
+    EventCategory.Covid19Tracker,
+    'GET Latest Daily Stats of All Regions'
+  );
   const countryStats = await getLatestDailyStats();
   if (countryStats) {
     res.json(transformLatestDailyStats(countryStats));
@@ -66,6 +76,7 @@ app.get('/api/daily', async (req, res) => {
 });
 
 app.get('/api/regions', async (req, res) => {
+  sendEvent(EventCategory.Covid19Tracker, 'GET Regions');
   const regions = await getAllCountryNames();
   res.json(regions);
 });
