@@ -37,4 +37,12 @@ module.exports = {
   covid19: {
     earliestReportDate: '2020-01-22',
   },
+  memcached: {
+    expires: 600,
+    cacheNames: {
+      allCountryNames: 'AllCountryNames',
+      countryDailyStats: 'CountryDailyStats',
+      latestDailyStats: 'LatestDailyStats',
+    },
+  },
 };

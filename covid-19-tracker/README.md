@@ -3,18 +3,20 @@ This API provides the Covid-19 daily stats for a given region or country, and th
 # .env
 
 ```
-MONGO_HOST=localhost
+MONGO_HOST=mongo
 MONGO_PORT=27017
 MONGO_DB_NAME=covid19
 MONGO_INITDB_ROOT_USERNAME=xxx
 MONGO_INITDB_ROOT_PASSWORD=xxx
 
-MAILER_SERVER=localhost
+MAILER_SERVER=mailer
 MAILER_PORT=25
 MAILER_FROM=xxx@example.com
 MAILER_TO=xxx@example.com
 
 WS_PORT=3000
+
+MEMCACHED_HOST=memcached
 ```
 
 # How to run

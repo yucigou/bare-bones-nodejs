@@ -17,6 +17,13 @@ services:
       retries: 5
       start_period: 40s
 
+  memcached:
+    image: memcached
+    command:
+      - '-m 256'
+    ports:
+      - '11211:11211'
+
   mailer:
     image: namshi/smtp
     restart: always
@@ -33,6 +40,7 @@ services:
       - '3030:3000'
     depends_on:
       - mongo
+      - memcached
       - mailer
     env_file:
       - .env

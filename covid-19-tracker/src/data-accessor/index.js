@@ -1,6 +1,6 @@
 'use strict';
 require('dotenv').config();
-const { mongodb, queue, covid19 } = require('config');
+const { mongodb, queue, covid19, memcached } = require('config');
 const logger = require('../utils/logger');
 const mapSeries = require('../utils/map-series');
 const { getNextDate, isReportDateValid } = require('../utils/date');
@@ -11,6 +11,7 @@ const Payload = require('./models/payload');
 const Country = require('./models/country');
 const World = require('./models/world');
 const MetaData = require('../data-accessor/models/metadata');
+const { getCache, setCache } = require('./cache');
 
 const mongooseQueue = new MongooseQueue(
   queue.modelName,
@@ -144,6 +145,11 @@ const updateMetadata = async (reportDate) => {
 };
 
 const getCountryDailyStats = async (countryName) => {
+  const countryStats = await getCache(memcached.cacheNames.countryDailyStats);
+  if (countryStats) {
+    return countryStats;
+  }
+
   const country = await Country.findOne(
     {
       $or: [
@@ -155,10 +161,17 @@ const getCountryDailyStats = async (countryName) => {
     },
     '-_id name dailyStats.confirmed dailyStats.recovered dailyStats.deaths dailyStats.active dailyStats.reportDate'
   );
+
+  await setCache(memcached.cacheNames.countryDailyStats, country);
   return country;
 };
 
 const getLatestDailyStats = async () => {
+  const latestStats = await getCache(memcached.cacheNames.latestDailyStats);
+  if (latestStats) {
+    return latestStats;
+  }
+
   const countries = await Country.aggregate([
     {
       $match: {
@@ -189,10 +202,17 @@ const getLatestDailyStats = async () => {
       },
     },
   ]);
+
+  await setCache(memcached.cacheNames.latestDailyStats, countries);
   return countries;
 };
 
 const getAllCountryNames = async () => {
+  const allCountryNames = await getCache(memcached.cacheNames.allCountryNames);
+  if (allCountryNames) {
+    return allCountryNames;
+  }
+
   const countries = await Country.aggregate([
     {
       $match: {
@@ -223,6 +243,8 @@ const getAllCountryNames = async () => {
       $sort: { name: 1 },
     },
   ]);
+
+  await setCache(memcached.cacheNames.allCountryNames, countries);
   return countries;
 };
 
