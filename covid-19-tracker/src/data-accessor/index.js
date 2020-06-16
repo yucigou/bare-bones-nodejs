@@ -145,7 +145,9 @@ const updateMetadata = async (reportDate) => {
 };
 
 const getCountryDailyStats = async (countryName) => {
-  const countryStats = await getCache(memcached.cacheNames.countryDailyStats);
+  const countryStats = await getCache(
+    `${memcached.cacheNames.countryDailyStats}${countryName}`
+  );
   if (countryStats) {
     return countryStats;
   }
@@ -162,7 +164,10 @@ const getCountryDailyStats = async (countryName) => {
     '-_id name dailyStats.confirmed dailyStats.recovered dailyStats.deaths dailyStats.active dailyStats.reportDate'
   );
 
-  await setCache(memcached.cacheNames.countryDailyStats, country);
+  await setCache(
+    `${memcached.cacheNames.countryDailyStats}${countryName}`,
+    country
+  );
   return country;
 };
 
