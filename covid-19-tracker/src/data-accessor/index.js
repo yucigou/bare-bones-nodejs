@@ -146,7 +146,7 @@ const updateMetadata = async (reportDate) => {
 
 const getCountryDailyStats = async (countryName) => {
   const countryStats = await getCache(
-    `${memcached.cacheNames.countryDailyStats}${countryName}`
+    `${memcached.cacheNames.countryDailyStats}-${countryName}`
   );
   if (countryStats) {
     return countryStats;
@@ -165,7 +165,7 @@ const getCountryDailyStats = async (countryName) => {
   );
 
   await setCache(
-    `${memcached.cacheNames.countryDailyStats}${countryName}`,
+    `${memcached.cacheNames.countryDailyStats}-${countryName}`,
     country
   );
   return country;
