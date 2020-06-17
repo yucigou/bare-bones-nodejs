@@ -91,3 +91,56 @@ nginx_up 1
 # TYPE nginxexporter_build_info gauge
 nginxexporter_build_info{gitCommit="a2910f1",version="0.7.0"} 1
 ```
+
+# Development
+
+## .env
+
+```
+MONGO_HOST=localhost
+MONGO_PORT=27017
+MONGO_DB_NAME=covid19
+MONGO_INITDB_ROOT_USERNAME=root
+MONGO_INITDB_ROOT_PASSWORD=example
+
+MAILER_SERVER=localhost
+MAILER_PORT=25
+MAILER_FROM=devops@codegoodworks.dev
+MAILER_TO=yuci.gou@gmail.com
+
+WS_PORT=3000
+
+MEMCACHED_HOST=localhost
+```
+
+## Clean up
+
+```
+$ docker-compose down --remove-orphans -v
+```
+
+## Start the services
+
+```
+$ docker-compose up mongo memcached mailer
+```
+
+## Seeding
+
+```
+$ PROCESSOR='SeedCountry' node src/seeds/load-countries.js
+```
+
+## Start web service
+
+```
+$ PROCESSOR='Web_Service' node src/public-rest-api/index.js
+```
+
+## Public API
+
+```
+http://localhost:3000/api/regions
+http://localhost:3000/api/daily/United%20Kingdom
+http://localhost:3000/api/daily
+```

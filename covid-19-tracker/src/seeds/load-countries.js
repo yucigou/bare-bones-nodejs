@@ -24,7 +24,7 @@ const seedStats = async () => {
   let { latestReportDate, worldDaily } = await getWorldDailyReportFromAPI();
   await updateWorldDaily(worldDaily);
 
-  latestReportDate = '2020-03-11';
+  // latestReportDate = '2020-03-11';
   // latestReportDate = '2020-01-22';
   logger.info(
     `To fill up to the current latest report date ${latestReportDate}`
