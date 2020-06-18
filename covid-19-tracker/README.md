@@ -137,6 +137,18 @@ $ PROCESSOR='SeedCountry' node src/seeds/load-countries.js
 $ PROCESSOR='Web_Service' node src/public-rest-api/index.js
 ```
 
+## Start data loader
+
+```
+$ PROCESSOR='Data_Loader' node src/data-loading-worker/index.js
+```
+
+## Start cronjob
+
+```
+$ PROCESSOR='Job_Crontab' node src/job-scheduler/index.js
+```
+
 ## Public API
 
 ```
