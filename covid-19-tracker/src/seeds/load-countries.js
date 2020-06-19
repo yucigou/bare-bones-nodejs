@@ -17,7 +17,9 @@ const main = async () => {
   await seedCountries();
   await seedStats();
   logger.info(`Closing DB connection`);
-  conn.close();
+  await conn.close();
+  logger.info(`Finished seeding`);
+  process.exit();
 };
 
 const seedStats = async () => {

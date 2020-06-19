@@ -1,0 +1,54 @@
+version: '3.4'
+
+services:
+  mongo:
+    image: mongo
+    restart: always
+    env_file:
+      - .env
+    volumes:
+      - ~/local-volume/mongo-data:/data/db
+    healthcheck:
+      test: echo 'db.runCommand({serverStatus:1}).ok' | mongo admin -u $MONGO_INITDB_ROOT_USERNAME -p $MONGO_INITDB_ROOT_PASSWORD --quiet | grep 1
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+
+  memcached:
+    image: memcached
+    command:
+      - '-m 256'
+
+  mailer:
+    image: namshi/smtp
+    restart: always
+
+  app:
+    image: covid_19_tracker:1.0.0
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    command: sh -c "./wrapperScript.sh"
+    depends_on:
+      - mongo
+      - memcached
+      - mailer
+    env_file:
+      - .env
+    environment:
+      VIRTUAL_HOST: covid19-api.codegoodworks.co.uk
+    volumes:
+      - ~/local-volume/logs:/usr/src/app/logs
+
+  nginx-proxy:
+    image: jwilder/nginx-proxy
+    ports:
+      - '80:80'
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+      - ./config/nginx/default_location:/etc/nginx/vhost.d/default_location
+    environment:
+      DEFAULT_HOST: covid19-api.codegoodworks.co.uk
+    depends_on:
+      - app
