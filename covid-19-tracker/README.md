@@ -155,4 +155,8 @@ $ PROCESSOR='Job_Crontab' node src/job-scheduler/index.js
 http://localhost:3000/api/regions
 http://localhost:3000/api/daily/United%20Kingdom
 http://localhost:3000/api/daily
+http://localhost:3000/api/last/day
+http://localhost:3000/api/last/week
+http://localhost:3000/api/last/month
+http://localhost:3000/api/last/alltime
 ```

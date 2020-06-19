@@ -54,7 +54,23 @@ const getWorldDailyReportFromAPI = async () => {
   };
 };
 
+// ('2020-06-01', -1) => '2020-05-31'
+const getShiftedDay = (baseDate, shifted) => {
+  const date = new Date(baseDate);
+  date.setDate(date.getDate() + shifted);
+  return formatDate(date);
+};
+
+// ('2020-01-17', -2) => '2019-11-17'
+const getShiftedMonth = (baseDate, shifted) => {
+  const date = new Date(baseDate);
+  date.setMonth(date.getMonth() + shifted);
+  return formatDate(date);
+};
+
 module.exports = {
+  getShiftedDay,
+  getShiftedMonth,
   getWorldDailyReportFromAPI,
   getNextDate,
   isDateAcceptable,

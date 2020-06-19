@@ -1,9 +1,14 @@
 'use strict';
 require('dotenv').config();
-const { mongodb, queue, covid19, memcached } = require('config');
+const { mongodb, queue, covid19, memcached, publicApi } = require('config');
 const logger = require('../utils/logger');
 const mapSeries = require('../utils/map-series');
-const { getNextDate, isReportDateValid } = require('../utils/date');
+const {
+  getShiftedDay,
+  getShiftedMonth,
+  getNextDate,
+  isReportDateValid,
+} = require('../utils/date');
 const { curateCountryName } = require('../utils/country');
 const mongoose = require('mongoose');
 const { MongooseQueue } = require('mongoose-queue');
@@ -210,6 +215,88 @@ const getLatestDailyStats = async () => {
 
   await setCache(memcached.cacheNames.latestDailyStats, countries);
   return countries;
+};
+
+const getPassedStats = async (period) => {
+  const latestReportDate = await getLatestReportDate();
+  let startDate;
+  switch (period) {
+    case publicApi.passedPeriod.day:
+      startDate = getShiftedDay(latestReportDate, -1);
+      break;
+    case publicApi.passedPeriod.week:
+      startDate = getShiftedDay(latestReportDate, -7);
+      break;
+    case publicApi.passedPeriod.month:
+      startDate = getShiftedMonth(latestReportDate, -2);
+      break;
+    default:
+      return getLatestDailyStats();
+  }
+
+  let passedStats = await getCache(
+    `${memcached.cacheNames.passedStats}-${period}`
+  );
+  if (passedStats) {
+    return passedStats;
+  }
+
+  const countries = await Country.aggregate([
+    {
+      $match: {
+        dailyStats: { $exists: true },
+      },
+    },
+    {
+      $project: {
+        name: 1,
+        iso2: {
+          $cond: {
+            if: { $eq: [null, '$iso2'] },
+            then: '$$REMOVE',
+            else: '$iso2',
+          },
+        },
+        dailyStats: {
+          $filter: {
+            input: '$dailyStats',
+            as: 'el',
+            cond: {
+              $gte: ['$$el.reportDate', startDate],
+            },
+          },
+        },
+      },
+    },
+  ]);
+
+  passedStats = countries
+    .map(({ name, iso2, dailyStats }) => {
+      if (dailyStats && dailyStats.length >= 2) {
+        dailyStats.sort((a, b) => a.reportDate.localeCompare(b.reportDate));
+        return {
+          name,
+          iso2,
+          latestReportDate: {
+            confirmed:
+              dailyStats[dailyStats.length - 1].confirmed -
+              dailyStats[0].confirmed,
+            recovered:
+              dailyStats[dailyStats.length - 1].recovered -
+              dailyStats[0].recovered,
+            active:
+              dailyStats[dailyStats.length - 1].active - dailyStats[0].active,
+            deaths:
+              dailyStats[dailyStats.length - 1].deaths - dailyStats[0].deaths,
+          },
+        };
+      }
+      return null;
+    })
+    .filter((country) => country);
+
+  await setCache(`${memcached.cacheNames.passedStats}-${period}`, passedStats);
+  return passedStats;
 };
 
 const getAllCountryNames = async () => {
@@ -431,6 +518,7 @@ module.exports = {
   getAllCountries,
   getLatestDailyStats,
   getLatestReportDate,
+  getPassedStats,
   isUpdated,
   publish,
   saveCountryNames,

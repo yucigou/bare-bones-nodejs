@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const { publicApi } = require('config');
 const logger = require('../utils/logger');
 const { isDateAcceptable } = require('../utils/date');
 const { sortDailyStats, transformLatestDailyStats } = require('./transformer');
@@ -8,6 +9,7 @@ const {
   getAllCountryNames,
   getCountryDailyStats,
   getLatestDailyStats,
+  getPassedStats,
   publish,
 } = require('../data-accessor');
 const { EventCategory, sendEvent } = require('./analytics');
@@ -79,6 +81,22 @@ app.get('/api/regions', async (req, res) => {
   sendEvent(EventCategory.Covid19Tracker, 'GET Regions');
   const regions = await getAllCountryNames();
   res.json(regions);
+});
+
+// Get stats of passed day, week, month, alltime
+app.get('/api/last/:period', async (req, res) => {
+  const { period } = req.params;
+  if (!(period in publicApi.passedPeriod)) {
+    res.sendStatus(404);
+    return;
+  }
+  sendEvent(EventCategory.Covid19Tracker, `GET Stats of passed ${period}`);
+  const countryStats = await getPassedStats(period);
+  if (countryStats) {
+    res.json(transformLatestDailyStats(countryStats));
+  } else {
+    res.json({});
+  }
 });
 
 const port = process.env.WS_PORT || 3000;

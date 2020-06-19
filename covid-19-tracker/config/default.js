@@ -43,6 +43,15 @@ module.exports = {
       allCountryNames: 'AllCountryNames',
       countryDailyStats: 'CountryDailyStats',
       latestDailyStats: 'LatestDailyStats',
+      passedStats: 'PassedStats',
+    },
+  },
+  publicApi: {
+    passedPeriod: {
+      day: 'day',
+      week: 'week',
+      month: 'month',
+      alltime: 'alltime',
     },
   },
 };
