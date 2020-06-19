@@ -218,6 +218,17 @@ const getLatestDailyStats = async () => {
 };
 
 const getPassedStats = async (period) => {
+  let passedStats = await getCache(
+    `${memcached.cacheNames.passedStats}-${period}`
+  );
+  if (passedStats) {
+    return passedStats;
+  }
+
+  if (period === publicApi.passedPeriod.alltime) {
+    return getLatestDailyStats();
+  }
+
   const latestReportDate = await getLatestReportDate();
   let startDate;
   switch (period) {
@@ -228,17 +239,10 @@ const getPassedStats = async (period) => {
       startDate = getShiftedDay(latestReportDate, -7);
       break;
     case publicApi.passedPeriod.month:
-      startDate = getShiftedMonth(latestReportDate, -2);
+      startDate = getShiftedMonth(latestReportDate, -1);
       break;
     default:
-      return getLatestDailyStats();
-  }
-
-  let passedStats = await getCache(
-    `${memcached.cacheNames.passedStats}-${period}`
-  );
-  if (passedStats) {
-    return passedStats;
+      return [];
   }
 
   const countries = await Country.aggregate([
@@ -420,10 +424,22 @@ const updateCountriesToDB = async (
 };
 
 const getLatestReportDate = async () => {
+  const latestReportDate = await getCache(
+    memcached.cacheNames.latestReportDate
+  );
+  if (latestReportDate) {
+    return latestReportDate;
+  }
+
   const metadata = await MetaData.findOne({});
   if (!metadata) {
     return null;
   }
+
+  await setCache(
+    memcached.cacheNames.latestReportDate,
+    metadata.latestReportDate
+  );
   return metadata.latestReportDate;
 };
 

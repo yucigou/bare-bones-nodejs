@@ -43,6 +43,7 @@ module.exports = {
       allCountryNames: 'AllCountryNames',
       countryDailyStats: 'CountryDailyStats',
       latestDailyStats: 'LatestDailyStats',
+      latestReportDate: 'LatestReportDate',
       passedStats: 'PassedStats',
     },
   },

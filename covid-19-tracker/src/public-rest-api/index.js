@@ -64,6 +64,7 @@ app.get('/api/daily/:region/:mostRecentDate?', async (req, res) => {
   }
 });
 
+// TODO: remove me
 app.get('/api/daily', async (req, res) => {
   sendEvent(
     EventCategory.Covid19Tracker,
@@ -84,7 +85,7 @@ app.get('/api/regions', async (req, res) => {
 });
 
 // Get stats of passed day, week, month, alltime
-app.get('/api/last/:period', async (req, res) => {
+app.get('/api/passed/:period', async (req, res) => {
   const { period } = req.params;
   if (!(period in publicApi.passedPeriod)) {
     res.sendStatus(404);
